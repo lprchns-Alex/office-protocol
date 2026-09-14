@@ -20,9 +20,6 @@ import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { useFonts } from "expo-font";
-import { RobotoCondensed_700Bold } from "@expo-google-fonts/roboto-condensed/700Bold";
-import { RobotoCondensed_500Medium } from "@expo-google-fonts/roboto-condensed/500Medium";
-import { IBMPlexMono_400Regular } from "@expo-google-fonts/ibm-plex-mono/400Regular";
 import {
   ArrowDownRight,
   ArrowLeft,
@@ -81,9 +78,9 @@ export default function App() {
 }
 function OfficeApp() {
   const [fonts, fontError] = useFonts({
-    Display: RobotoCondensed_700Bold,
-    Body: RobotoCondensed_500Medium,
-    Mono: IBMPlexMono_400Regular,
+    Display: require("./assets/fonts/RobotoCondensed_700Bold.ttf"),
+    Body: require("./assets/fonts/RobotoCondensed_500Medium.ttf"),
+    Mono: require("./assets/fonts/IBMPlexMono_400Regular.ttf"),
   });
   const [game, setGame] = useState<Game>(createGame);
   const [ready, setReady] = useState(false);
