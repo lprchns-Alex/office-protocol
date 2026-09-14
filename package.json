@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "gh-pages": "^6.3.0",
     "qrcode": "^1.5.4",
     "sharp": "^0.35.4",
     "typescript": "~6.0.3"
@@ -33,7 +34,10 @@
     "assets": "node scripts/assets.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/game.test.mjs",
-    "export": "expo export --platform all"
+    "export": "expo export --platform all",
+    "export:web": "expo export --platform web",
+    "predeploy": "npm run export:web",
+    "deploy": "gh-pages --nojekyll -d dist"
   },
   "private": true
 }
