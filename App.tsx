@@ -9,7 +9,6 @@ import {
   ScrollView,
   Share,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   View,
@@ -21,7 +20,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { useFonts } from "expo-font";
 import {
-  ArrowDownRight,
   ArrowLeft,
   ArrowUpRight,
   Check,
@@ -40,6 +38,7 @@ import {
   Users,
   X,
   Zap,
+  TriangleAlert,
 } from "lucide-react-native";
 import {
   Card,
@@ -55,7 +54,20 @@ import {
   reroll,
   restoreGame,
 } from "./src/game";
-import { T, Mono, Tag, Button, Avatar, Meter, P, s } from "./src/ui";
+import {
+  T,
+  Mono,
+  Tag,
+  Button,
+  Avatar,
+  Meter,
+  CyberFrame,
+  Radar,
+  Segments,
+  TechnicalStrip,
+  P,
+  s,
+} from "./src/ui";
 
 const STORAGE = "office-protocol:v1";
 type Tab = "Бинго" | "Манагеры" | "Настройки";
@@ -107,7 +119,7 @@ function OfficeApp() {
   const card = game.cards.find((c) => c.id === activeCard);
   const entries = game.incidents.filter((i) => i.managerId === manager.id);
   const allMarked = board.marked.length === 9;
-  const cellWidth = (Math.min(width, 480) - 48 - 16) / 3;
+  const cellWidth = (Math.min(width, 480) - 36 - 12) / 3;
   useEffect(() => {
     let alive = true;
     AsyncStorage.getItem(STORAGE)
@@ -299,17 +311,19 @@ function OfficeApp() {
     );
   return (
     <View style={s.root}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <SafeAreaView edges={["top"]} style={s.safeTop} />
       <View style={s.phone}>
         <View style={s.topbar}>
           <View style={s.row}>
-            <Crosshair size={19} color={P.ink} strokeWidth={2} />
+            <Crosshair size={20} color={P.lime} strokeWidth={1.5} />
             <T style={s.brand}>OFFICE_PROTOCOL</T>
           </View>
-          <View style={s.row}>
-            <View style={s.onlineDot} />
-            <Mono style={s.topLabel}>СИСТЕМА АКТИВНА</Mono>
+          <View style={{ alignItems: "flex-end", gap: 4 }}>
+            <Mono style={s.topLabel}>НА СВЯЗИ</Mono>
+            <View style={{ width: 32 }}>
+              <Segments value={1} total={4} />
+            </View>
           </View>
         </View>
         <ScrollView
@@ -324,44 +338,46 @@ function OfficeApp() {
               onPress={() => setStorageError("")}
               style={s.warning}
             >
-              <T style={{ color: P.ink }}>{storageError}</T>
+              <T style={{ color: P.white }}>{storageError}</T>
             </Pressable>
           )}
           {tab === "Бинго" && (
             <>
-              <View style={s.hero}>
+              <CyberFrame style={h.hero} color={P.lime} texture>
                 <View style={s.between}>
-                  <Mono style={s.eyebrow}>
-                    ПРОТОКОЛ № 001 / ОФИСНЫЕ АНОМАЛИИ
-                  </Mono>
-                  <Crosshair size={17} color={P.ink} />
+                  <Mono style={h.eyebrow}>СЕКТОР 01 / ОФИСНЫЕ АНОМАЛИИ</Mono>
+                  <View style={s.onlineDot} />
                 </View>
-                <View
-                  style={[s.between, { alignItems: "flex-end", marginTop: 13 }]}
-                >
-                  <T
-                    style={[
-                      s.heroTitle,
-                      { fontSize: Math.min(33, (width - 110) / 8.3) },
-                    ]}
-                  >
-                    КРИНЖ{`\n`}ПОД КОНТРОЛЕМ
-                  </T>
-                  <View style={{ alignItems: "flex-end", paddingBottom: 5 }}>
-                    <T style={s.heroNumber}>
-                      {String(level(board.score)).padStart(2, "0")}
+                <View style={[s.between, { marginTop: 12 }]}>
+                  <View style={{ flex: 1 }}>
+                    <T
+                      style={[
+                        h.heroTitle,
+                        { fontSize: Math.min(34, (width - 60) / 9.7) },
+                      ]}
+                    >
+                      КРИНЖ ПОД{`\n`}КОНТРОЛЕМ<T style={{ color: P.lime }}>_</T>
                     </T>
-                    <Mono style={s.eyebrow}>УРОВЕНЬ</Mono>
+                    <Mono style={[h.eyebrow, { color: P.muted, marginTop: 9 }]}>
+                      НАБЛЮДАТЕЛЬ / УР.{" "}
+                      {String(level(board.score)).padStart(2, "0")}
+                    </Mono>
                   </View>
+                  <Radar
+                    size={Math.min(100, width * 0.23)}
+                    value={board.marked.length / 9}
+                  />
                 </View>
-                <View style={s.heroBottom}>
+                <View style={h.heroFooter}>
                   <View style={s.row}>
-                    <Radio size={14} color={P.ink} />
-                    <Mono style={s.eyebrow}>НАБЛЮДАЕМ. ФИКСИРУЕМ.</Mono>
+                    <Radio size={12} color={P.lime} />
+                    <Mono style={h.eyebrow}>ПРОТОКОЛ АКТИВЕН</Mono>
                   </View>
-                  <ArrowDownRight color={P.ink} size={20} />
+                  <View style={{ width: 85 }}>
+                    <TechnicalStrip />
+                  </View>
                 </View>
-              </View>
+              </CyberFrame>
               <View style={s.section}>
                 <Pressable
                   accessibilityRole="button"
@@ -369,35 +385,37 @@ function OfficeApp() {
                   onPress={() => setSheet("select")}
                   style={s.managerSelect}
                 >
-                  <Avatar manager={manager} />
+                  <Avatar manager={manager} size={44} />
                   <View style={{ flex: 1, gap: 3 }}>
                     <Mono style={s.small}>ОБЪЕКТ НАБЛЮДЕНИЯ</Mono>
-                    <T style={s.managerName}>
-                      {manager.name}{" "}
-                      <T style={{ color: P.muted, fontSize: 16 }}>
-                        {" "}
-                        / {manager.alias}
-                      </T>
+                    <T style={s.managerName}>{manager.name.toUpperCase()}</T>
+                    <T style={{ color: P.muted, fontSize: 13 }}>
+                      {manager.alias}
                     </T>
                   </View>
                   <ChevronDown size={18} color={P.lime} />
                 </Pressable>
-                <View style={[s.between, { marginTop: 26, marginBottom: 15 }]}>
-                  <T style={s.sectionTitle}>МАТРИЦА БИНГО</T>
-                  <Mono style={{ color: P.lime, fontSize: 10 }}>
-                    {board.marked.length} ИЗ 9 ЗАФИКСИРОВАНО
+                <View style={[s.between, { marginTop: 20, marginBottom: 12 }]}>
+                  <View style={s.row}>
+                    <Grid3X3 size={16} color={P.lime} strokeWidth={1.5} />
+                    <T style={s.sectionTitle}>МАТРИЦА БИНГО</T>
+                  </View>
+                  <Mono style={{ color: P.lime, fontSize: 11 }}>
+                    {String(board.marked.length).padStart(2, "0")}{" "}
+                    <Mono style={{ color: P.muted, fontSize: 11 }}>/ 09</Mono>
                   </Mono>
                 </View>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 7, paddingBottom: 15 }}
+                  contentContainerStyle={{ gap: 6, paddingBottom: 12 }}
                 >
                   {[null, ...CATEGORIES].map((c) => (
                     <Pressable
                       key={c ?? "all"}
                       accessibilityRole="button"
                       accessibilityState={{ selected: category === c }}
+                      aria-pressed={category === c}
                       onPress={() => setCategory(c)}
                       style={[s.chip, category === c && s.chipActive]}
                     >
@@ -420,44 +438,75 @@ function OfficeApp() {
                         accessibilityRole="button"
                         accessibilityLabel={`${c.text}, ${c.points} очков${checked ? ", зафиксировано" : ""}`}
                         accessibilityState={{ selected: checked }}
+                        aria-pressed={checked}
                         onPress={() => openCard(id)}
                         style={({ pressed }) => [
                           s.cell,
                           {
                             width: cellWidth,
-                            height: Math.max(126, cellWidth * 1.17),
+                            minHeight: Math.max(126, cellWidth * 1.12),
+                            padding: 0,
+                            borderWidth: 0,
                           },
-                          checked && s.cellChecked,
                           dim && { opacity: 0.3 },
                           pressed && { transform: [{ scale: 0.97 }] },
                         ]}
                       >
-                        <View style={s.between}>
-                          <Mono
+                        <CyberFrame
+                          cut={7}
+                          color={checked ? P.lime : "#3D5041"}
+                          fill={checked ? P.lime : P.panel}
+                          style={{
+                            flex: 1,
+                            padding: 9,
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <View style={s.between}>
+                            <Mono
+                              style={[
+                                s.cellIndex,
+                                checked && { color: "#496000" },
+                              ]}
+                            >
+                              {["А", "Б", "В"][Math.floor(index / 3)]}
+                              {(index % 3) + 1}
+                            </Mono>
+                            {checked ? (
+                              <Check size={14} color={P.ink} />
+                            ) : (
+                              <View style={s.cellCorner} />
+                            )}
+                          </View>
+                          <T
                             style={[
-                              s.cellIndex,
-                              checked && { color: "#496000" },
+                              s.cellText,
+                              width < 360 && { fontSize: 14, lineHeight: 17 },
+                              checked && { color: P.ink },
                             ]}
                           >
-                            {String(index + 1).padStart(2, "0")}
-                          </Mono>
-                          {checked ? (
-                            <Check size={14} color={P.ink} />
-                          ) : (
-                            <View style={s.cellCorner} />
-                          )}
-                        </View>
-                        <T
-                          numberOfLines={4}
-                          style={[s.cellText, checked && { color: P.ink }]}
-                        >
-                          {c.text}
-                        </T>
-                        <Mono
-                          style={[s.cellPoints, checked && { color: P.ink }]}
-                        >
-                          {checked ? "ЗАФИКСИРОВАНО" : `+${c.points} КРИНЖА`}
-                        </Mono>
+                            {c.text}
+                          </T>
+                          <View style={s.between}>
+                            <Mono
+                              style={[
+                                s.cellPoints,
+                                checked && { color: P.ink },
+                              ]}
+                            >
+                              {checked ? "ЗАЧТЕНО" : `+${c.points} ОЧ.`}
+                            </Mono>
+                            {!checked && (
+                              <View style={{ width: 23 }}>
+                                <Segments
+                                  value={c.points / 200}
+                                  total={4}
+                                  color={c.points === 200 ? P.red : P.lime}
+                                />
+                              </View>
+                            )}
+                          </View>
+                        </CyberFrame>
                       </Pressable>
                     );
                   })}
@@ -483,7 +532,7 @@ function OfficeApp() {
                       : "ОБНОВИТЬ НЕЗАЧЁРКНУТЫЕ"}
                   </Mono>
                 </Pressable>
-                <View style={s.scorePanel}>
+                <CyberFrame style={s.scorePanel}>
                   <View style={[s.between, { marginBottom: 17 }]}>
                     <View style={s.row}>
                       <Zap size={18} color={P.lime} />
@@ -510,7 +559,7 @@ function OfficeApp() {
                       {1000 - (board.score % 1000)}
                     </Mono>
                   </View>
-                </View>
+                </CyberFrame>
                 <View style={{ marginTop: 16 }}>
                   <Button
                     secondary
@@ -598,6 +647,9 @@ function OfficeApp() {
                 <T style={s.subtitle}>
                   Лица, стоящие за фразой «тут на пять минут».
                 </T>
+                <View style={{ marginTop: 18 }}>
+                  <TechnicalStrip />
+                </View>
               </View>
               <View style={s.section}>
                 {game.managers.map((m, i) => (
@@ -606,42 +658,64 @@ function OfficeApp() {
                     accessibilityLabel={`Досье: ${m.name}`}
                     key={m.id}
                     onPress={() => setProfile(m.id)}
-                    style={s.managerCard}
+                    style={({ pressed }) => [
+                      { marginBottom: 12, opacity: pressed ? 0.75 : 1 },
+                    ]}
                   >
-                    <View style={[s.between, { marginBottom: 18 }]}>
-                      <Mono style={s.small}>
-                        ДОСЬЕ / {String(i + 1).padStart(3, "0")}
-                      </Mono>
-                      <Tag>УР. {level(game.boards[m.id].score)}</Tag>
-                    </View>
-                    <View style={s.row}>
-                      <Avatar manager={m} size={64} />
-                      <View style={{ flex: 1, gap: 4 }}>
-                        <T style={{ fontFamily: "Display", fontSize: 28 }}>
-                          {m.name}
-                        </T>
-                        <T style={{ color: P.muted, fontSize: 14 }}>
-                          {m.alias}
-                        </T>
+                    <CyberFrame
+                      style={[s.managerCard, { marginBottom: 0 }]}
+                      color={m.id === manager.id ? P.lime : P.line}
+                    >
+                      <View style={[s.between, { marginBottom: 18 }]}>
+                        <Mono
+                          style={[
+                            s.small,
+                            { color: m.id === manager.id ? P.lime : P.muted },
+                          ]}
+                        >
+                          {String(i + 1).padStart(3, "0")} /{" "}
+                          {m.id === manager.id
+                            ? "ПОД НАБЛЮДЕНИЕМ"
+                            : "ДОСЬЕ ОБЪЕКТА"}
+                        </Mono>
+                        <Tag>УР. {level(game.boards[m.id].score)}</Tag>
                       </View>
-                      <ArrowUpRight size={23} color={P.lime} />
-                    </View>
-                    <View style={{ marginTop: 20 }}>
-                      <Meter score={game.boards[m.id].score} />
-                    </View>
+                      <View style={s.row}>
+                        <Avatar manager={m} size={64} />
+                        <View style={{ flex: 1, gap: 4 }}>
+                          <T style={{ fontFamily: "Display", fontSize: 28 }}>
+                            {m.name.toUpperCase()}
+                          </T>
+                          <T style={{ color: P.muted, fontSize: 14 }}>
+                            {m.alias}
+                          </T>
+                        </View>
+                        <ArrowUpRight size={23} color={P.lime} />
+                      </View>
+                      <View style={{ marginTop: 20 }}>
+                        <Meter score={game.boards[m.id].score} />
+                      </View>
+                      <View style={[h.dossierFooter, { marginTop: 14 }]}>
+                        <Mono style={s.small}>{m.role.toUpperCase()}</Mono>
+                        <Crosshair size={13} color={P.muted} />
+                      </View>
+                    </CyberFrame>
                   </Pressable>
                 ))}
                 {game.managers.length >= 2 && (
-                  <View style={s.pairing}>
-                    <Mono style={[s.small, { color: P.ink }]}>
-                      АНАЛИЗ СОВМЕСТИМОСТИ
-                    </Mono>
+                  <CyberFrame style={s.pairing} color={P.red}>
+                    <View style={s.row}>
+                      <TriangleAlert size={15} color={P.red} />
+                      <Mono style={[s.small, { color: P.red }]}>
+                        АНАЛИЗ СОВМЕСТИМОСТИ
+                      </Mono>
+                    </View>
                     <View style={[s.between, { marginTop: 15 }]}>
                       <T
                         style={{
                           fontFamily: "Display",
                           fontSize: 32,
-                          color: P.ink,
+                          color: P.white,
                           lineHeight: 32,
                         }}
                       >
@@ -654,15 +728,22 @@ function OfficeApp() {
                         </View>
                       </View>
                     </View>
-                    <T style={{ color: P.ink, marginTop: 15, fontSize: 15 }}>
+                    <T
+                      style={{
+                        color: P.muted,
+                        marginTop: 15,
+                        fontSize: 15,
+                        lineHeight: 21,
+                      }}
+                    >
                       {game.managers[0].name} назначает созвоны.{" "}
                       {game.managers[1].name} приносит правки. Вечный двигатель
                       найден.
                     </T>
-                    <Mono style={{ fontSize: 9, color: P.ink, marginTop: 18 }}>
+                    <Mono style={{ fontSize: 9, color: P.red, marginTop: 18 }}>
                       ВЕРДИКТ: ОПАСНО ДЛЯ ДЕДЛАЙНА
                     </Mono>
-                  </View>
+                  </CyberFrame>
                 )}
                 <Mono style={s.footerNote}>
                   ВСЕ ПЕРСОНАЖИ ВЫМЫШЛЕНЫ.{`\n`}СОВПАДЕНИЯ — ПОВОД ДЛЯ БИНГО.
@@ -688,29 +769,41 @@ function OfficeApp() {
                       К СПИСКУ ОБЪЕКТОВ
                     </Mono>
                   </Pressable>
-                  <View style={s.profilePanel}>
+                  <CyberFrame style={s.profilePanel}>
                     <View style={s.between}>
-                      <Mono style={s.small}>ЛИЧНОЕ ДЕЛО</Mono>
+                      <Mono style={[s.small, { color: P.lime }]}>
+                        ЛИЧНОЕ ДЕЛО /{" "}
+                        {String(game.managers.indexOf(m) + 1).padStart(3, "0")}
+                      </Mono>
                       <Crosshair size={20} color={P.lime} />
                     </View>
-                    <View style={{ alignItems: "center", paddingVertical: 25 }}>
-                      <Avatar manager={m} size={104} />
-                      <T
-                        style={{
-                          fontFamily: "Display",
-                          fontSize: 49,
-                          marginTop: 17,
-                        }}
-                      >
-                        {m.name.toUpperCase()}
-                      </T>
-                      <T style={{ color: P.lime, fontSize: 18, marginTop: 2 }}>
-                        {m.alias}
-                      </T>
-                      <Mono style={[s.small, { marginTop: 10 }]}>
-                        {m.role.toUpperCase()}
-                      </Mono>
+                    <View
+                      style={[
+                        s.row,
+                        {
+                          paddingVertical: 23,
+                          gap: 18,
+                          alignItems: "flex-start",
+                        },
+                      ]}
+                    >
+                      <Avatar manager={m} size={94} />
+                      <View style={{ flex: 1, gap: 8 }}>
+                        <T
+                          style={{
+                            fontFamily: "Display",
+                            fontSize: 36,
+                          }}
+                        >
+                          {m.name.toUpperCase()}
+                        </T>
+                        <T style={{ color: P.lime, fontSize: 17 }}>{m.alias}</T>
+                        <Mono style={[s.small, { lineHeight: 15 }]}>
+                          {m.role.toUpperCase()}
+                        </Mono>
+                      </View>
                     </View>
+                    <TechnicalStrip />
                     <View style={s.stats}>
                       <View>
                         <T style={s.statNumber}>
@@ -730,7 +823,7 @@ function OfficeApp() {
                       </View>
                     </View>
                     <Meter score={b.score} />
-                  </View>
+                  </CyberFrame>
                   <T
                     style={[
                       s.sectionTitle,
@@ -742,9 +835,22 @@ function OfficeApp() {
                   {CATEGORIES.map((c) => (
                     <View key={c} style={s.settingRow}>
                       <T>{c}</T>
-                      <Tag>
-                        СОБЫТИЯ: {events.filter((i) => i.category === c).length}
-                      </Tag>
+                      <View style={[s.row, { width: "48%" }]}>
+                        <View style={{ flex: 1 }}>
+                          <Segments
+                            value={
+                              events.filter((i) => i.category === c).length /
+                              Math.max(10, events.length)
+                            }
+                            total={10}
+                          />
+                        </View>
+                        <Mono style={{ color: P.lime, fontSize: 12 }}>
+                          {String(
+                            events.filter((i) => i.category === c).length,
+                          ).padStart(2, "0")}
+                        </Mono>
+                      </View>
                     </View>
                   ))}
                   <T style={[s.subtitle, { marginBottom: 22 }]}>
@@ -782,18 +888,23 @@ function OfficeApp() {
                 <Mono style={s.small}>КОНФИГУРАЦИЯ / ЛОКАЛЬНЫЙ УЗЕЛ</Mono>
                 <T style={[s.pageTitle, { marginTop: 8 }]}>НАСТРОЙКИ</T>
                 <T style={s.subtitle}>Ваш офис. Ваши правила протокола.</T>
+                <View style={{ marginTop: 18 }}>
+                  <TechnicalStrip />
+                </View>
               </View>
               <View style={s.section}>
-                <View style={s.adminPanel}>
+                <CyberFrame style={s.adminPanel}>
                   <Shield size={28} color={P.lime} />
                   <View style={{ flex: 1 }}>
-                    <T style={{ fontSize: 20 }}>{game.admin ? "ЛОКАЛЬНЫЙ АДМИН" : "НАБЛЮДАТЕЛЬ"}</T>
+                    <T style={{ fontSize: 20 }}>
+                      {game.admin ? "ЛОКАЛЬНЫЙ АДМИН" : "НАБЛЮДАТЕЛЬ"}
+                    </T>
                     <T style={{ fontSize: 14, color: P.muted, marginTop: 5 }}>
                       Управление досье и общей базой карточек
                     </T>
                   </View>
                   <Tag>01</Tag>
-                </View>
+                </CyberFrame>
                 <View style={s.settingRow}>
                   <View style={{ flex: 1 }}>
                     <T style={{ fontSize: 18 }}>Режим администратора</T>
@@ -801,12 +912,10 @@ function OfficeApp() {
                       Отключите, чтобы оставить только игру
                     </T>
                   </View>
-                  <Switch
+                  <ProtocolSwitch
                     accessibilityLabel="Режим администратора"
                     value={game.admin}
                     onValueChange={(admin) => setGame((g) => ({ ...g, admin }))}
-                    trackColor={{ false: P.line, true: P.lime }}
-                    thumbColor={P.ink}
                   />
                 </View>
                 <View style={s.settingRow}>
@@ -814,14 +923,12 @@ function OfficeApp() {
                     <T style={{ fontSize: 18 }}>Тактильный отклик</T>
                     <T style={s.settingHelp}>Короткий импульс при фиксации</T>
                   </View>
-                  <Switch
+                  <ProtocolSwitch
                     accessibilityLabel="Тактильный отклик"
                     value={game.haptics}
                     onValueChange={(haptics) =>
                       setGame((g) => ({ ...g, haptics }))
                     }
-                    trackColor={{ false: P.line, true: P.lime }}
-                    thumbColor={P.ink}
                   />
                 </View>
                 <Pressable
@@ -851,7 +958,10 @@ function OfficeApp() {
                   </View>
                   <ChevronRight size={20} color={P.muted} />
                 </Pressable>
-                <View style={[s.scorePanel, { marginTop: 25 }]}>
+                <CyberFrame
+                  style={[s.scorePanel, { marginTop: 25 }]}
+                  color={P.line}
+                >
                   <View style={s.row}>
                     <LockKeyhole size={18} color={P.lime} />
                     <Mono style={{ color: P.lime, fontSize: 10 }}>
@@ -869,7 +979,7 @@ function OfficeApp() {
                     Прогресс сохраняется автоматически. Аккаунт и интернет для
                     игры не нужны. Удаление приложения удалит локальную историю.
                   </T>
-                </View>
+                </CyberFrame>
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => setSheet("reset")}
@@ -888,7 +998,7 @@ function OfficeApp() {
                     OFFICE_PROTOCOL
                   </T>
                   <Mono style={s.small}>
-                    ВЕРСИЯ 1.0 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
+                    ВЕРСИЯ 1.1 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
                   </Mono>
                 </View>
               </View>
@@ -904,12 +1014,16 @@ function OfficeApp() {
                   key={t}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: tab === t }}
+                  aria-selected={tab === t}
                   onPress={() => {
                     setTab(t);
                     setProfile(null);
                     vibrate();
                   }}
-                  style={s.navItem}
+                  style={[
+                    s.navItem,
+                    tab === t && { backgroundColor: "#C7FF000A" },
+                  ]}
                 >
                   <View
                     style={[
@@ -917,19 +1031,30 @@ function OfficeApp() {
                       tab === t && { backgroundColor: P.lime },
                     ]}
                   />
-                  <Icon
-                    size={22}
-                    color={tab === t ? P.lime : P.muted}
-                    strokeWidth={1.7}
-                  />
+                  <View style={h.navIcon}>
+                    <Mono
+                      style={[
+                        h.navIndex,
+                        { color: tab === t ? P.lime : P.muted },
+                      ]}
+                    >
+                      0{i + 1}
+                    </Mono>
+                    <Icon
+                      size={22}
+                      color={tab === t ? P.lime : P.muted}
+                      strokeWidth={1.7}
+                    />
+                  </View>
                   <T
                     style={{
-                      fontSize: 13,
+                      fontSize: 10,
+                      fontFamily: "Mono",
                       color: tab === t ? P.lime : P.muted,
                       marginTop: 5,
                     }}
                   >
-                    {t}
+                    {t.toUpperCase()}
                   </T>
                 </Pressable>
               );
@@ -1021,24 +1146,53 @@ function OfficeApp() {
                           )}
                         </Mono>
                       </View>
-                      <View style={s.incidentCard}>
-                        <Crosshair size={36} color={P.ink} />
-                        <T style={s.incidentText}>{card.text.toUpperCase()}</T>
+                      <CyberFrame
+                        style={s.incidentCard}
+                        color={board.marked.includes(card.id) ? P.lime : P.red}
+                        texture
+                      >
                         <View style={s.between}>
-                          <Mono style={{ color: P.ink, fontSize: 11 }}>
+                          <TriangleAlert
+                            size={36}
+                            color={
+                              board.marked.includes(card.id) ? P.lime : P.red
+                            }
+                            strokeWidth={1.4}
+                          />
+                          <Mono
+                            style={{
+                              color: board.marked.includes(card.id)
+                                ? P.lime
+                                : P.red,
+                              fontSize: 10,
+                            }}
+                          >
+                            {board.marked.includes(card.id)
+                              ? "ЗАПИСЬ ПОДТВЕРЖДЕНА"
+                              : "ВОЗМОЖНАЯ АНОМАЛИЯ"}
+                          </Mono>
+                        </View>
+                        <T style={s.incidentText}>{card.text.toUpperCase()}</T>
+                        <TechnicalStrip
+                          color={
+                            board.marked.includes(card.id) ? P.lime : P.red
+                          }
+                        />
+                        <View style={s.between}>
+                          <Mono style={{ color: P.muted, fontSize: 11 }}>
                             СТЕПЕНЬ КРИНЖА
                           </Mono>
                           <T
                             style={{
                               fontFamily: "Display",
                               fontSize: 40,
-                              color: P.ink,
+                              color: P.lime,
                             }}
                           >
                             +{card.points}
                           </T>
                         </View>
-                      </View>
+                      </CyberFrame>
                       <T style={{ fontSize: 18, marginBottom: 8 }}>
                         {board.marked.includes(card.id)
                           ? "Этот инцидент уже зафиксирован."
@@ -1072,10 +1226,10 @@ function OfficeApp() {
                   {sheet === "report" && (
                     <>
                       <T style={s.modalTitle}>РАПОРТ О КРИНЖЕ</T>
-                      <View style={s.report}>
+                      <CyberFrame style={s.report}>
                         <View style={s.between}>
-                          <Crosshair color={P.ink} size={29} />
-                          <Mono style={{ color: P.ink, fontSize: 10 }}>
+                          <Crosshair color={P.lime} size={29} />
+                          <Mono style={{ color: P.muted, fontSize: 10 }}>
                             ВНУТРЕННИЙ ДОКУМЕНТ{`\n`}ОФИС / СЕКТОР 01
                           </Mono>
                         </View>
@@ -1083,13 +1237,15 @@ function OfficeApp() {
                           style={{
                             fontFamily: "Display",
                             fontSize: 44,
-                            color: P.ink,
+                            color: P.white,
                             marginTop: 23,
                           }}
                         >
                           ОБЪЕКТ: {manager.name.toUpperCase()}
                         </T>
-                        <T style={{ color: P.ink, fontSize: 20, marginTop: 5 }}>
+                        <T
+                          style={{ color: P.muted, fontSize: 20, marginTop: 5 }}
+                        >
                           {manager.alias}
                         </T>
                         <View style={[s.reportLine, { marginVertical: 23 }]} />
@@ -1097,16 +1253,16 @@ function OfficeApp() {
                           style={{
                             fontFamily: "Display",
                             fontSize: 68,
-                            color: P.ink,
+                            color: P.lime,
                           }}
                         >
                           {board.score}
-                          <T style={{ fontSize: 20, color: P.ink }}>
+                          <T style={{ fontSize: 16, color: P.muted }}>
                             {" "}
                             ОЧКОВ КРИНЖА
                           </T>
                         </T>
-                        <Mono style={{ color: P.ink, fontSize: 11 }}>
+                        <Mono style={{ color: P.lime, fontSize: 11 }}>
                           УРОВЕНЬ {level(board.score)} /{" "}
                           {rank(board.score).toUpperCase()}
                         </Mono>
@@ -1121,18 +1277,22 @@ function OfficeApp() {
                                 marginBottom: 12,
                               }}
                             >
-                              <Mono style={{ color: P.ink, fontSize: 10 }}>
+                              <Mono style={{ color: P.lime, fontSize: 10 }}>
                                 {String(n + 1).padStart(2, "0")}
                               </Mono>
                               <T
-                                style={{ color: P.ink, fontSize: 17, flex: 1 }}
+                                style={{
+                                  color: P.white,
+                                  fontSize: 17,
+                                  flex: 1,
+                                }}
                               >
                                 {i.text}
                               </T>
                             </View>
                           ))
                         ) : (
-                          <T style={{ color: P.ink, fontSize: 18 }}>
+                          <T style={{ color: P.white, fontSize: 18 }}>
                             Инцидентов нет. Репутация пока чиста.
                           </T>
                         )}
@@ -1142,7 +1302,7 @@ function OfficeApp() {
                             { marginTop: 15, marginBottom: 18 },
                           ]}
                         />
-                        <Mono style={{ color: P.ink, fontSize: 10 }}>
+                        <Mono style={{ color: P.lime, fontSize: 10 }}>
                           ВЕРДИКТ:{" "}
                           {entries.length
                             ? "ПРОДОЛЖИТЬ НАБЛЮДЕНИЕ"
@@ -1155,17 +1315,17 @@ function OfficeApp() {
                               style={{
                                 width: i % 3 === 0 ? 3 : 1,
                                 height: 25,
-                                backgroundColor: P.ink,
+                                backgroundColor: P.lime,
                               }}
                             />
                           ))}
                         </View>
                         <Mono
-                          style={{ color: P.ink, fontSize: 9, marginTop: 8 }}
+                          style={{ color: P.muted, fontSize: 9, marginTop: 8 }}
                         >
                           OFFICE_PROTOCOL / СОВПАДЕНИЯ НЕ СЛУЧАЙНЫ
                         </Mono>
-                      </View>
+                      </CyberFrame>
                       <Button onPress={shareReport}>ПОДЕЛИТЬСЯ РАПОРТОМ</Button>
                       <T
                         style={[
@@ -1460,24 +1620,27 @@ function OfficeApp() {
               ]}
             >
               <View style={s.between}>
-                <Crosshair size={25} color={P.ink} />
-                <Mono style={{ color: P.ink, fontSize: 10 }}>
+                <Crosshair size={25} color={P.lime} />
+                <Mono style={{ color: P.lime, fontSize: 10 }}>
                   СОВПАДЕНИЕ ПОДТВЕРЖДЕНО
                 </Mono>
               </View>
               <T style={s.winTitle}>БИНГО.</T>
-              <T style={{ color: P.ink, fontSize: 22 }}>Это уже система.</T>
+              <T style={{ color: P.white, fontSize: 22 }}>Это уже система.</T>
+              <View style={{ marginTop: 20 }}>
+                <TechnicalStrip />
+              </View>
               <T
                 style={{
                   fontFamily: "Display",
                   fontSize: 56,
-                  color: P.ink,
+                  color: P.lime,
                   marginTop: 20,
                 }}
               >
                 +{game.incidents[0]?.bonus ?? 300}
               </T>
-              <Mono style={{ color: P.ink, fontSize: 10 }}>
+              <Mono style={{ color: P.muted, fontSize: 10 }}>
                 БОНУС ЗА ЗАКРЫТЫЕ ЛИНИИ
               </Mono>
               <View style={{ marginTop: 30 }}>
@@ -1492,3 +1655,82 @@ function OfficeApp() {
     </View>
   );
 }
+
+function ProtocolSwitch({
+  value,
+  onValueChange,
+  accessibilityLabel,
+}: {
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+  accessibilityLabel: string;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ checked: value }}
+      aria-checked={value}
+      onPress={() => onValueChange(!value)}
+      style={({ pressed }) => ({
+        width: 66,
+        minHeight: 44,
+        justifyContent: "center",
+        opacity: pressed ? 0.7 : 1,
+      })}
+    >
+      <CyberFrame
+        cut={4}
+        color={value ? P.lime : P.muted}
+        style={{
+          padding: 6,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Mono style={{ fontSize: 9, color: value ? P.lime : P.muted }}>
+          {value ? "ВКЛ" : "ВЫКЛ"}
+        </Mono>
+        <View
+          style={{
+            width: 13,
+            height: 14,
+            backgroundColor: value ? P.lime : P.line,
+          }}
+        />
+      </CyberFrame>
+    </Pressable>
+  );
+}
+
+const h = StyleSheet.create({
+  hero: { marginHorizontal: 18, marginTop: 16, padding: 15, paddingBottom: 11 },
+  eyebrow: { color: P.lime, fontSize: 8, letterSpacing: 0.7 },
+  heroTitle: {
+    fontFamily: "Display",
+    color: P.white,
+    lineHeight: 35,
+    letterSpacing: 0.4,
+  },
+  heroFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    borderColor: "#C7FF002E",
+    marginTop: 11,
+    paddingTop: 9,
+  },
+  dossierFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    borderTopWidth: 1,
+    borderColor: P.line,
+    paddingTop: 10,
+  },
+  navIcon: { position: "relative", width: 48, alignItems: "center" },
+  navIndex: { position: "absolute", left: -7, top: -2, fontSize: 7 },
+});
