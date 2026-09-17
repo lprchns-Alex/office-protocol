@@ -212,11 +212,15 @@ export function CyberFrame({
 export function GlitchFrame({
   glitch,
   light = false,
+  fillContainer = true,
+  glitchTestID = "card-glitch-active",
   children,
   ...frameProps
 }: React.ComponentProps<typeof CyberFrame> & {
   glitch: boolean;
   light?: boolean;
+  fillContainer?: boolean;
+  glitchTestID?: string;
 }) {
   const { motionActive } = useMotionSettings();
   const progress = useRef(new Animated.Value(0)).current;
@@ -247,8 +251,11 @@ export function GlitchFrame({
   });
   return (
     <Animated.View
-      testID={active ? "card-glitch-active" : undefined}
-      style={{ flex: 1, transform: [{ translateX: active ? shift : 0 }] }}
+      testID={active ? glitchTestID : undefined}
+      style={{
+        flex: fillContainer ? 1 : undefined,
+        transform: [{ translateX: active ? shift : 0 }],
+      }}
     >
       <CyberFrame {...frameProps}>
         {children}

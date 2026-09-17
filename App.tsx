@@ -133,13 +133,16 @@ function OfficeApp() {
   const entries = game.incidents.filter((i) => i.managerId === manager.id);
   const allMarked = board.marked.length === 9;
   const cellWidth = (Math.min(width, 480) - 36 - 12) / 3;
+  const glitchesEnabled =
+    ready && fonts && tab === "Бинго" && sheet === null && !win;
+  const heroGlitch = useRandomGlitch(["hero"], glitchesEnabled);
   const glitchTarget = useRandomGlitch(
     board.cards.filter(
       (id) =>
         category === null ||
         game.cards.find((c) => c.id === id)?.category === category,
     ),
-    ready && fonts && tab === "Бинго" && sheet === null && !win,
+    glitchesEnabled,
   );
   useEffect(() => {
     if (reduceMotion) {
@@ -371,7 +374,14 @@ function OfficeApp() {
             )}
             {tab === "Бинго" && (
               <>
-                <CyberFrame style={h.hero} color={P.lime} texture>
+                <GlitchFrame
+                  glitch={heroGlitch === "hero"}
+                  glitchTestID="hero-glitch-active"
+                  fillContainer={false}
+                  style={h.hero}
+                  color={P.lime}
+                  texture
+                >
                   <View style={s.between}>
                     <Mono style={h.eyebrow}>СЕКТОР 01 / ОФИСНЫЕ АНОМАЛИИ</Mono>
                     <View style={s.onlineDot} />
@@ -416,7 +426,7 @@ function OfficeApp() {
                       <TechnicalStrip />
                     </View>
                   </View>
-                </CyberFrame>
+                </GlitchFrame>
                 <View style={s.section}>
                   <MotionPressable
                     accessibilityRole="button"
@@ -424,7 +434,7 @@ function OfficeApp() {
                     onPress={() => setSheet("select")}
                     style={s.managerSelect}
                   >
-                    <Avatar manager={manager} size={44} />
+                    <Avatar manager={manager} size={44 * 1.3} />
                     <View style={{ flex: 1, gap: 3 }}>
                       <Mono style={s.small}>ОБЪЕКТ НАБЛЮДЕНИЯ</Mono>
                       <T style={s.managerName}>{manager.name.toUpperCase()}</T>
@@ -1042,7 +1052,7 @@ function OfficeApp() {
                       OFFICE_PROTOCOL
                     </T>
                     <Mono style={s.small}>
-                      ВЕРСИЯ 1.3.0 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
+                      ВЕРСИЯ 1.3.1 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
                     </Mono>
                   </View>
                 </View>
