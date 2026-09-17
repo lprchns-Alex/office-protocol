@@ -476,7 +476,7 @@ function OfficeApp() {
                       >
                         {({ hovered, focused }) => (
                           <CyberFrame
-                            cut={7}
+                            cut={7 * 1.2}
                             color={
                               focused
                                 ? P.white
@@ -486,9 +486,9 @@ function OfficeApp() {
                             }
                             fill={category === c ? P.lime : P.panel}
                             style={{
-                              paddingHorizontal: 12,
-                              paddingVertical: 10,
-                              minHeight: 36,
+                              paddingHorizontal: 12 * 1.2,
+                              paddingVertical: 10 * 1.2,
+                              minHeight: 36 * 1.2,
                               justifyContent: "center",
                             }}
                           >
@@ -496,6 +496,7 @@ function OfficeApp() {
                               style={[
                                 s.chipText,
                                 {
+                                  fontSize: 9 * 1.2,
                                   color:
                                     category === c
                                       ? P.ink
@@ -1052,7 +1053,7 @@ function OfficeApp() {
                       OFFICE_PROTOCOL
                     </T>
                     <Mono style={s.small}>
-                      ВЕРСИЯ 1.3.1 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
+                      ВЕРСИЯ 1.3.2 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
                     </Mono>
                   </View>
                 </View>

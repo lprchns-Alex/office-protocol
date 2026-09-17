@@ -23,15 +23,47 @@ import {
 } from "react-native";
 import { startGlitchLoop } from "./glitch";
 
-type MotionSettings = { reduceMotion: boolean; motionActive: boolean };
+type MotionSettings = {
+  reduceMotion: boolean;
+  motionActive: boolean;
+  keyboardInput: boolean;
+};
 const MotionContext = createContext<MotionSettings>({
   reduceMotion: true,
   motionActive: false,
+  keyboardInput: false,
 });
 const accent = "#C7FF00";
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function MotionProvider({ children }: { children: React.ReactNode }) {
+  const [keyboardInput, setKeyboardInput] = useState(false);
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+    // Capture modality before Pressable receives focus, including focus restored
+    // by a closing modal. Keep DOM focus intact for keyboard/screen-reader users.
+    const keyboard = (event: KeyboardEvent) => {
+      if (
+        !event.metaKey &&
+        !event.altKey &&
+        !event.ctrlKey &&
+        !["Shift", "Control", "Alt", "Meta"].includes(event.key)
+      ) {
+        setKeyboardInput(true);
+      }
+    };
+    const pointer = () => setKeyboardInput(false);
+    document.addEventListener("keydown", keyboard, true);
+    document.addEventListener("pointerdown", pointer, true);
+    document.addEventListener("mousedown", pointer, true);
+    document.addEventListener("touchstart", pointer, true);
+    return () => {
+      document.removeEventListener("keydown", keyboard, true);
+      document.removeEventListener("pointerdown", pointer, true);
+      document.removeEventListener("mousedown", pointer, true);
+      document.removeEventListener("touchstart", pointer, true);
+    };
+  }, []);
   const [reduceMotion, setReduceMotion] = useState(true);
   const [foreground, setForeground] = useState(
     () => AppState.currentState == null || AppState.currentState === "active",
@@ -81,8 +113,9 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
     () => ({
       reduceMotion,
       motionActive: !reduceMotion && foreground && visible,
+      keyboardInput,
     }),
-    [reduceMotion, foreground, visible],
+    [reduceMotion, foreground, visible, keyboardInput],
   );
   return (
     <MotionContext.Provider value={settings}>{children}</MotionContext.Provider>
@@ -217,7 +250,7 @@ export const MotionPressable = forwardRef<View, MotionPressableProps>(
     },
     ref,
   ) {
-    const { motionActive } = useMotionSettings();
+    const { motionActive, keyboardInput } = useMotionSettings();
     const [pressed, setPressed] = useState(false);
     const [hovered, setHovered] = useState(false);
     const [focused, setFocused] = useState(false);
@@ -230,7 +263,7 @@ export const MotionPressable = forwardRef<View, MotionPressableProps>(
     const state: MotionPressableState = {
       pressed: !disabled && pressed,
       hovered: !disabled && hovered,
-      focused: !disabled && focused,
+      focused: !disabled && focused && (Platform.OS !== "web" || keyboardInput),
     };
     const highlighted = state.hovered || state.focused;
 
