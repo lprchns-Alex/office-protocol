@@ -76,6 +76,7 @@ import {
   useMotionSettings,
   useRandomGlitch,
 } from "./src/motion";
+import { ManagerDossier } from "./src/dossier";
 
 const STORAGE = "office-protocol:v1";
 type Tab = "Бинго" | "Манагеры" | "Настройки";
@@ -751,55 +752,21 @@ function OfficeApp() {
                       key={m.id}
                       enterDelay={i * 60}
                       onPress={() => setProfile(m.id)}
-                      style={{ marginBottom: 12 }}
+                      style={{ marginBottom: 20 }}
                     >
                       {({ hovered, focused }) => (
-                        <CyberFrame
-                          style={[s.managerCard, { marginBottom: 0 }]}
-                          color={
-                            m.id === manager.id || hovered || focused
-                              ? P.lime
-                              : P.line
+                        <ManagerDossier
+                          manager={m}
+                          index={i}
+                          score={game.boards[m.id].score}
+                          incidents={
+                            game.incidents.filter(
+                              (event) => event.managerId === m.id,
+                            ).length
                           }
-                        >
-                          <View style={[s.between, { marginBottom: 18 }]}>
-                            <Mono
-                              style={[
-                                s.small,
-                                {
-                                  color: m.id === manager.id ? P.lime : P.muted,
-                                },
-                              ]}
-                            >
-                              {String(i + 1).padStart(3, "0")} /{" "}
-                              {m.id === manager.id
-                                ? "ПОД НАБЛЮДЕНИЕМ"
-                                : "ДОСЬЕ ОБЪЕКТА"}
-                            </Mono>
-                            <Tag>УР. {level(game.boards[m.id].score)}</Tag>
-                          </View>
-                          <View style={s.row}>
-                            <Avatar manager={m} size={64} />
-                            <View style={{ flex: 1, gap: 4 }}>
-                              <T
-                                style={{ fontFamily: "Display", fontSize: 24 }}
-                              >
-                                {m.name.toUpperCase()}
-                              </T>
-                              <T style={{ color: P.muted, fontSize: 14 }}>
-                                {m.alias}
-                              </T>
-                            </View>
-                            <ArrowUpRight size={23} color={P.lime} />
-                          </View>
-                          <View style={{ marginTop: 20 }}>
-                            <Meter score={game.boards[m.id].score} />
-                          </View>
-                          <View style={[h.dossierFooter, { marginTop: 14 }]}>
-                            <Mono style={s.small}>{m.role.toUpperCase()}</Mono>
-                            <Crosshair size={13} color={P.muted} />
-                          </View>
-                        </CyberFrame>
+                          active={m.id === manager.id}
+                          highlighted={hovered || focused}
+                        />
                       )}
                     </MotionPressable>
                   ))}
@@ -880,66 +847,16 @@ function OfficeApp() {
                         К СПИСКУ ОБЪЕКТОВ
                       </Mono>
                     </Pressable>
-                    <CyberFrame style={s.profilePanel}>
-                      <View style={s.between}>
-                        <Mono style={[s.small, { color: P.lime }]}>
-                          ЛИЧНОЕ ДЕЛО /{" "}
-                          {String(game.managers.indexOf(m) + 1).padStart(
-                            3,
-                            "0",
-                          )}
-                        </Mono>
-                        <Crosshair size={20} color={P.lime} />
-                      </View>
-                      <View
-                        style={[
-                          s.row,
-                          {
-                            paddingVertical: 23,
-                            gap: 12,
-                            alignItems: "flex-start",
-                          },
-                        ]}
-                      >
-                        <Avatar manager={m} size={width < 360 ? 70 : 94} />
-                        <View style={{ flex: 1, gap: 8 }}>
-                          <T
-                            style={{
-                              fontFamily: "Display",
-                              fontSize: width < 360 ? 25 : 30,
-                            }}
-                          >
-                            {m.name.toUpperCase()}
-                          </T>
-                          <T style={{ color: P.lime, fontSize: 17 }}>
-                            {m.alias}
-                          </T>
-                          <Mono style={[s.small, { lineHeight: 15 }]}>
-                            {m.role.toUpperCase()}
-                          </Mono>
-                        </View>
-                      </View>
-                      <TechnicalStrip />
-                      <View style={s.stats}>
-                        <View>
-                          <T style={s.statNumber}>
-                            {String(level(b.score)).padStart(2, "0")}
-                          </T>
-                          <Mono style={s.small}>УРОВЕНЬ</Mono>
-                        </View>
-                        <View>
-                          <T style={s.statNumber}>
-                            {String(events.length).padStart(2, "0")}
-                          </T>
-                          <Mono style={s.small}>ИНЦИДЕНТЫ</Mono>
-                        </View>
-                        <View>
-                          <T style={s.statNumber}>{b.score}</T>
-                          <Mono style={s.small}>КРИНЖ</Mono>
-                        </View>
-                      </View>
+                    <ManagerDossier
+                      manager={m}
+                      index={game.managers.indexOf(m)}
+                      score={b.score}
+                      incidents={events.length}
+                      expanded
+                    />
+                    <View style={{ marginTop: 20 }}>
                       <Meter score={b.score} />
-                    </CyberFrame>
+                    </View>
                     <T
                       style={[
                         s.sectionTitle,
@@ -1125,7 +1042,7 @@ function OfficeApp() {
                       OFFICE_PROTOCOL
                     </T>
                     <Mono style={s.small}>
-                      ВЕРСИЯ 1.2.2 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
+                      ВЕРСИЯ 1.3.0 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
                     </Mono>
                   </View>
                 </View>
@@ -1875,15 +1792,6 @@ const h = StyleSheet.create({
     borderColor: "#C7FF002E",
     marginTop: 11,
     paddingTop: 9,
-  },
-  dossierFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-    borderTopWidth: 1,
-    borderColor: P.line,
-    paddingTop: 10,
   },
   navIcon: { position: "relative", width: 48, alignItems: "center" },
   navIndex: { position: "absolute", left: -7, top: -2, fontSize: 7 },

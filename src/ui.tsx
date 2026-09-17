@@ -2,6 +2,7 @@ import React, { useEffect, useId, useRef, useState } from "react";
 import {
   Animated,
   Easing,
+  Image,
   Platform,
   StyleSheet,
   Text,
@@ -22,6 +23,7 @@ import { ArrowUpRight, type ProtocolIconProps } from "./icons";
 import type { Manager } from "./game";
 import { MotionPressable, useMotionSettings } from "./motion";
 import { GLITCH_DURATION } from "./glitch";
+import { getPortrait } from "./portraits";
 
 const MotionCircle = React.forwardRef<
   Circle,
@@ -377,23 +379,44 @@ export function Button({
 export function Avatar({
   manager,
   size = 48,
+  style,
 }: {
   manager: Manager;
   size?: number;
+  style?: StyleProp<ViewStyle>;
 }) {
+  const [failed, setFailed] = useState(false);
+  const source = getPortrait(manager.id);
+  useEffect(() => setFailed(false), [source]);
+  const hasPhoto = !!source && !failed;
   return (
-    <View style={[s.avatar, { width: size, height: size }]}>
+    <View
+      style={[
+        s.avatar,
+        { width: size, height: size, backgroundColor: P.ink },
+        style,
+      ]}
+    >
+      {hasPhoto && (
+        <Image
+          source={source}
+          resizeMode="cover"
+          style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
+          accessible={false}
+          onError={() => setFailed(true)}
+        />
+      )}
       <View
         style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
         accessibilityElementsHidden
       >
-        <Svg width={size} height={size} viewBox="0 0 80 80">
+        <Svg width="100%" height="100%" viewBox="0 0 80 80">
           <Rect
             x={0.75}
             y={0.75}
             width={78.5}
             height={78.5}
-            fill={P.ink}
+            fill={hasPhoto ? "none" : P.ink}
             stroke={manager.color}
             strokeOpacity={0.45}
           />
@@ -411,7 +434,7 @@ export function Avatar({
           <Path
             d="M 0 15 L 0 0 L 15 0 M 65 0 L 80 0 L 80 15 M 80 65 L 80 80 L 65 80 M 15 80 L 0 80 L 0 65"
             stroke={manager.color}
-            strokeWidth={2.5}
+            strokeWidth={hasPhoto ? 1 : 2.5}
             fill="none"
           />
           <Line
@@ -449,16 +472,18 @@ export function Avatar({
           />
         </Svg>
       </View>
-      <T
-        style={{
-          fontSize: size * 0.33,
-          color: manager.color,
-          fontFamily: "Display",
-          letterSpacing: -0.6,
-        }}
-      >
-        {manager.initials}
-      </T>
+      {!hasPhoto && (
+        <T
+          style={{
+            fontSize: size * 0.33,
+            color: manager.color,
+            fontFamily: "Display",
+            letterSpacing: -0.6,
+          }}
+        >
+          {manager.initials}
+        </T>
+      )}
     </View>
   );
 }
@@ -981,7 +1006,6 @@ export const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  managerCard: { padding: 16, marginBottom: 13 },
   tag: {
     borderWidth: 1,
     borderColor: "#3B511B",
@@ -1002,22 +1026,6 @@ export const s = StyleSheet.create({
     marginVertical: 25,
   },
   back: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 64 },
-  profilePanel: { padding: 18 },
-  stats: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: P.line,
-    paddingVertical: 17,
-    marginBottom: 20,
-  },
-  statNumber: {
-    fontSize: 36,
-    fontFamily: "Display",
-    color: P.lime,
-    marginBottom: 4,
-  },
   settingRow: {
     minHeight: 80,
     paddingVertical: 18,
