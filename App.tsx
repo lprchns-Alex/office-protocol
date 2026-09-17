@@ -39,7 +39,7 @@ import {
   X,
   Zap,
   TriangleAlert,
-} from "lucide-react-native";
+} from "./src/icons";
 import {
   Card,
   CATEGORIES,
@@ -1082,7 +1082,7 @@ function OfficeApp() {
                       OFFICE_PROTOCOL
                     </T>
                     <Mono style={s.small}>
-                      ВЕРСИЯ 1.2 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
+                      ВЕРСИЯ 1.2.1 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
                     </Mono>
                   </View>
                 </View>
@@ -1099,6 +1099,7 @@ function OfficeApp() {
                   key={t}
                   lift={0}
                   accessibilityRole="tab"
+                  accessibilityLabel={t}
                   accessibilityState={{ selected: tab === t }}
                   aria-selected={tab === t}
                   onPress={() => {
@@ -1127,9 +1128,10 @@ function OfficeApp() {
                       0{i + 1}
                     </Mono>
                     <Icon
-                      size={22}
+                      size={26}
                       color={tab === t ? P.lime : P.muted}
-                      strokeWidth={1.7}
+                      strokeWidth={1.5}
+                      active={tab === t}
                     />
                   </View>
                   <T

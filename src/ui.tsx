@@ -18,7 +18,7 @@ import Svg, {
   Polygon,
   Rect,
 } from "react-native-svg";
-import { ArrowUpRight } from "lucide-react-native";
+import { ArrowUpRight, type ProtocolIconProps } from "./icons";
 import type { Manager } from "./game";
 import { MotionPressable, useMotionSettings } from "./motion";
 
@@ -223,7 +223,7 @@ export function Button({
   onPress: () => void;
   secondary?: boolean;
   disabled?: boolean;
-  icon?: typeof ArrowUpRight;
+  icon?: React.ComponentType<ProtocolIconProps>;
 }) {
   return (
     <MotionPressable
