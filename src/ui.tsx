@@ -800,7 +800,7 @@ export const s = StyleSheet.create({
     gap: 8,
   },
   wrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  small: { fontSize: 9, color: P.muted, letterSpacing: 0.45 },
+  small: { fontSize: 11, color: P.muted, letterSpacing: 0.45 },
   content: { paddingBottom: 24 },
   topbar: {
     backgroundColor: P.ink,
@@ -818,7 +818,7 @@ export const s = StyleSheet.create({
     color: P.lime,
     letterSpacing: 0.2,
   },
-  topLabel: { fontSize: 7, color: P.muted, letterSpacing: 0.35 },
+  topLabel: { fontSize: 9, color: P.muted, letterSpacing: 0.35 },
   onlineDot: { width: 4, height: 4, backgroundColor: P.lime },
   hero: {
     backgroundColor: P.ink,
@@ -826,7 +826,7 @@ export const s = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 10,
   },
-  eyebrow: { fontSize: 8, color: P.lime, letterSpacing: 0.8 },
+  eyebrow: { fontSize: 10, color: P.lime, letterSpacing: 0.8 },
   heroTitle: {
     fontFamily: "Display",
     fontSize: 38,
@@ -896,7 +896,7 @@ export const s = StyleSheet.create({
     backgroundColor: P.ink,
   },
   chipActive: { backgroundColor: P.lime, borderColor: P.lime },
-  chipText: { color: P.muted, fontSize: 9 },
+  chipText: { color: P.muted, fontSize: 11 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   cell: {
     backgroundColor: "transparent",
@@ -906,7 +906,7 @@ export const s = StyleSheet.create({
     justifyContent: "space-between",
   },
   cellChecked: { backgroundColor: P.lime, borderColor: P.lime },
-  cellIndex: { color: P.muted, fontSize: 8, letterSpacing: 0.5 },
+  cellIndex: { color: P.muted, fontSize: 10, letterSpacing: 0.5 },
   cellCorner: {
     width: 7,
     height: 7,
@@ -915,7 +915,7 @@ export const s = StyleSheet.create({
     borderColor: P.lime,
   },
   cellText: { fontSize: 14, lineHeight: 18, marginVertical: 8 },
-  cellPoints: { fontSize: 8, color: P.lime },
+  cellPoints: { fontSize: 10, color: P.lime },
   reroll: {
     flexDirection: "row",
     gap: 10,
@@ -1023,11 +1023,11 @@ export const s = StyleSheet.create({
     alignItems: "center",
     gap: 5,
   },
-  tagText: { color: P.lime, fontSize: 8, letterSpacing: 0.2 },
+  tagText: { color: P.lime, fontSize: 10, letterSpacing: 0.2 },
   pairing: { padding: 20, marginTop: 15 },
   footerNote: {
     color: P.muted,
-    fontSize: 9,
+    fontSize: 11,
     lineHeight: 17,
     textAlign: "center",
     marginVertical: 25,
@@ -1145,7 +1145,7 @@ export const s = StyleSheet.create({
   },
   fieldLabel: {
     color: P.muted,
-    fontSize: 10,
+    fontSize: 12,
     marginTop: 23,
     marginBottom: 10,
     letterSpacing: 0.5,

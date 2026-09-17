@@ -496,7 +496,7 @@ function OfficeApp() {
                               style={[
                                 s.chipText,
                                 {
-                                  fontSize: 9 * 1.2,
+                                  fontSize: 12.8,
                                   color:
                                     category === c
                                       ? P.ink
@@ -624,7 +624,7 @@ function OfficeApp() {
                     style={s.reroll}
                   >
                     <RefreshCw size={15} color={P.muted} />
-                    <Mono style={{ color: P.muted, fontSize: 10 }}>
+                    <Mono style={{ color: P.muted, fontSize: 12 }}>
                       {allMarked
                         ? "НАЧАТЬ НОВУЮ СМЕНУ"
                         : "ОБНОВИТЬ НЕЗАЧЁРКНУТЫЕ"}
@@ -651,10 +651,10 @@ function OfficeApp() {
                     </View>
                     <Meter score={board.score} />
                     <View style={[s.between, { marginTop: 10 }]}>
-                      <Mono style={{ fontSize: 9, color: P.muted }}>
+                      <Mono style={{ fontSize: 11, color: P.muted }}>
                         {rank(board.score).toUpperCase()}
                       </Mono>
-                      <Mono style={{ fontSize: 9, color: P.muted }}>
+                      <Mono style={{ fontSize: 11, color: P.muted }}>
                         ДО УР. {level(board.score) + 1}:{" "}
                         {1000 - (board.score % 1000)}
                       </Mono>
@@ -720,7 +720,7 @@ function OfficeApp() {
                     onPress={() => setSheet("rules")}
                     style={s.rulesLink}
                   >
-                    <Mono style={{ color: P.muted, fontSize: 10 }}>
+                    <Mono style={{ color: P.muted, fontSize: 12 }}>
                       КАК РАБОТАЕТ ПРОТОКОЛ
                     </Mono>
                     <ArrowUpRight size={14} color={P.muted} />
@@ -826,7 +826,7 @@ function OfficeApp() {
                         двигатель найден.
                       </T>
                       <Mono
-                        style={{ fontSize: 9, color: P.red, marginTop: 18 }}
+                        style={{ fontSize: 11, color: P.red, marginTop: 18 }}
                       >
                         ВЕРДИКТ: ОПАСНО ДЛЯ ДЕДЛАЙНА
                       </Mono>
@@ -1014,7 +1014,7 @@ function OfficeApp() {
                   >
                     <View style={s.row}>
                       <LockKeyhole size={18} color={P.lime} />
-                      <Mono style={{ color: P.lime, fontSize: 10 }}>
+                      <Mono style={{ color: P.lime, fontSize: 12 }}>
                         ДАННЫЕ НА ЭТОМ УСТРОЙСТВЕ
                       </Mono>
                     </View>
@@ -1053,7 +1053,7 @@ function OfficeApp() {
                       OFFICE_PROTOCOL
                     </T>
                     <Mono style={s.small}>
-                      ВЕРСИЯ 1.3.2 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
+                      ВЕРСИЯ 1.3.3 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
                     </Mono>
                   </View>
                 </View>
@@ -1107,7 +1107,7 @@ function OfficeApp() {
                   </View>
                   <T
                     style={{
-                      fontSize: 10,
+                      fontSize: 12,
                       fontFamily: "Mono",
                       color: tab === t ? P.lime : P.muted,
                       marginTop: 5,
@@ -1145,7 +1145,7 @@ function OfficeApp() {
             >
               <SafeAreaView edges={["bottom"]} style={s.sheet}>
                 <View style={s.sheetTop}>
-                  <Mono style={{ fontSize: 10, color: P.lime }}>
+                  <Mono style={{ fontSize: 12, color: P.lime }}>
                     OFFICE_PROTOCOL /{" "}
                     {sheet === "card" ? "ИНЦИДЕНТ" : "СИСТЕМА"}
                   </Mono>
@@ -1223,7 +1223,7 @@ function OfficeApp() {
                               color: board.marked.includes(card.id)
                                 ? P.lime
                                 : P.red,
-                              fontSize: 10,
+                              fontSize: 12,
                             }}
                           >
                             {board.marked.includes(card.id)
@@ -1288,14 +1288,14 @@ function OfficeApp() {
                       <CyberFrame style={s.report}>
                         <View style={s.between}>
                           <Crosshair color={P.lime} size={29} />
-                          <Mono style={{ color: P.muted, fontSize: 10 }}>
+                          <Mono style={{ color: P.muted, fontSize: 12 }}>
                             ВНУТРЕННИЙ ДОКУМЕНТ{`\n`}ОФИС / СЕКТОР 01
                           </Mono>
                         </View>
                         <Mono
                           style={{
                             color: P.muted,
-                            fontSize: 10,
+                            fontSize: 12,
                             marginTop: 23,
                           }}
                         >
@@ -1328,7 +1328,7 @@ function OfficeApp() {
                         </T>
                         <Mono
                           style={{
-                            fontSize: 10,
+                            fontSize: 12,
                             color: P.muted,
                             marginBottom: 12,
                           }}
@@ -1350,7 +1350,7 @@ function OfficeApp() {
                                 marginBottom: 12,
                               }}
                             >
-                              <Mono style={{ color: P.lime, fontSize: 10 }}>
+                              <Mono style={{ color: P.lime, fontSize: 12 }}>
                                 {String(n + 1).padStart(2, "0")}
                               </Mono>
                               <T
@@ -1375,7 +1375,7 @@ function OfficeApp() {
                             { marginTop: 15, marginBottom: 18 },
                           ]}
                         />
-                        <Mono style={{ color: P.lime, fontSize: 10 }}>
+                        <Mono style={{ color: P.lime, fontSize: 12 }}>
                           ВЕРДИКТ:{" "}
                           {entries.length
                             ? "ПРОДОЛЖИТЬ НАБЛЮДЕНИЕ"
@@ -1394,7 +1394,7 @@ function OfficeApp() {
                           ))}
                         </View>
                         <Mono
-                          style={{ color: P.muted, fontSize: 9, marginTop: 8 }}
+                          style={{ color: P.muted, fontSize: 11, marginTop: 8 }}
                         >
                           OFFICE_PROTOCOL / СОВПАДЕНИЯ НЕ СЛУЧАЙНЫ
                         </Mono>
@@ -1694,7 +1694,7 @@ function OfficeApp() {
             >
               <View style={s.between}>
                 <Crosshair size={25} color={P.lime} />
-                <Mono style={{ color: P.lime, fontSize: 10 }}>
+                <Mono style={{ color: P.lime, fontSize: 12 }}>
                   СОВПАДЕНИЕ ПОДТВЕРЖДЕНО
                 </Mono>
               </View>
@@ -1722,7 +1722,7 @@ function OfficeApp() {
               >
                 +{game.incidents[0]?.bonus ?? 300}
               </T>
-              <Mono style={{ color: P.muted, fontSize: 10 }}>
+              <Mono style={{ color: P.muted, fontSize: 12 }}>
                 БОНУС ЗА ЗАКРЫТЫЕ ЛИНИИ
               </Mono>
               <View style={{ marginTop: 30 }}>
@@ -1771,7 +1771,7 @@ function ProtocolSwitch({
           alignItems: "center",
         }}
       >
-        <Mono style={{ fontSize: 9, color: value ? P.lime : P.muted }}>
+        <Mono style={{ fontSize: 11, color: value ? P.lime : P.muted }}>
           {value ? "ВКЛ" : "ВЫКЛ"}
         </Mono>
         <View
@@ -1788,7 +1788,7 @@ function ProtocolSwitch({
 
 const h = StyleSheet.create({
   hero: { marginHorizontal: 18, marginTop: 16, padding: 15, paddingBottom: 11 },
-  eyebrow: { color: P.lime, fontSize: 8, letterSpacing: 0.7 },
+  eyebrow: { color: P.lime, fontSize: 10, letterSpacing: 0.7 },
   heroTitle: {
     fontFamily: "Display",
     color: P.white,
@@ -1805,5 +1805,5 @@ const h = StyleSheet.create({
     paddingTop: 9,
   },
   navIcon: { position: "relative", width: 48, alignItems: "center" },
-  navIndex: { position: "absolute", left: -7, top: -2, fontSize: 7 },
+  navIndex: { position: "absolute", left: -7, top: -2, fontSize: 9 },
 });

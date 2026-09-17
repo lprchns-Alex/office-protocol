@@ -67,7 +67,7 @@ export function ManagerDossier({
           </View>
           <View style={d.photoCaption}>
             <View style={{ width: 5, height: 5, backgroundColor: accent }} />
-            <Mono style={[d.micro, { fontSize: 8 }]}>
+            <Mono style={[d.micro, { fontSize: 10 }]}>
               {character ? "СНИМОК В АРХИВЕ" : "НЕТ СНИМКА"}
             </Mono>
           </View>
@@ -85,8 +85,8 @@ export function ManagerDossier({
                 accessibilityLabel={`${trait.label}: ${trait.value} из 10. Характеристика персонажа`}
               >
                 <View style={d.traitLabel}>
-                  <Mono style={[d.micro, { fontSize: 8 }]}>{trait.label}</Mono>
-                  <Mono style={[d.micro, { color: P.white, fontSize: 8 }]}>
+                  <Mono style={[d.micro, { fontSize: 10 }]}>{trait.label}</Mono>
+                  <Mono style={[d.micro, { color: P.white, fontSize: 10 }]}>
                     {String(trait.value).padStart(2, "0")}
                   </Mono>
                 </View>
@@ -96,7 +96,7 @@ export function ManagerDossier({
           ) : (
             <T style={d.pending}>Профиль ещё не изучен.</T>
           )}
-          <Mono style={[d.micro, { fontSize: 7, lineHeight: 11 }]}>
+          <Mono style={[d.micro, { fontSize: 9, lineHeight: 13 }]}>
             ИГРОВОЙ ПЕРСОНАЖ
           </Mono>
         </View>
@@ -121,7 +121,7 @@ export function ManagerDossier({
         ].map(([value, label], i) => (
           <View key={label} style={[d.metric, i > 0 && d.metricBorder]}>
             <T style={d.metricValue}>{value}</T>
-            <Mono style={[d.micro, { fontSize: 8 }]}>{label}</Mono>
+            <Mono style={[d.micro, { fontSize: 10 }]}>{label}</Mono>
           </View>
         ))}
       </View>
@@ -153,7 +153,7 @@ const d = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: P.line,
   },
-  micro: { fontSize: 9, lineHeight: 13, color: P.muted, letterSpacing: 0.15 },
+  micro: { fontSize: 11, lineHeight: 15, color: P.muted, letterSpacing: 0.15 },
   signal: { flexDirection: "row", alignItems: "center", gap: 8 },
   identity: {
     flexDirection: "row",
