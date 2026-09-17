@@ -1,7 +1,9 @@
-import React, { useId, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
+  Platform,
   StyleSheet,
-  Pressable,
   Text,
   View,
   type StyleProp,
@@ -18,6 +20,20 @@ import Svg, {
 } from "react-native-svg";
 import { ArrowUpRight } from "lucide-react-native";
 import type { Manager } from "./game";
+import { MotionPressable, useMotionSettings } from "./motion";
+
+const MotionCircle = React.forwardRef<
+  Circle,
+  React.ComponentProps<typeof Circle> & { collapsable?: boolean }
+>((props, ref) => {
+  // Animated adds this native-only prop; react-native-svg forwards it to the DOM.
+  if (Platform.OS === "web") {
+    const { collapsable: _collapsable, ...svgProps } = props;
+    return <Circle {...svgProps} ref={ref} />;
+  }
+  return <Circle {...props} ref={ref} />;
+});
+const AnimatedCircle = Animated.createAnimatedComponent(MotionCircle);
 
 export const P = {
   lime: "#C7FF00",
@@ -210,7 +226,7 @@ export function Button({
   icon?: typeof ArrowUpRight;
 }) {
   return (
-    <Pressable
+    <MotionPressable
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       disabled={disabled}
@@ -220,22 +236,29 @@ export function Button({
         pressed && { opacity: 0.65 },
       ]}
     >
-      <CyberFrame
-        style={[s.button, secondary && s.buttonSecondary]}
-        color={secondary ? P.muted : P.lime}
-        fill={secondary ? P.ink : "#101B09"}
-        cut={8}
-      >
-        <T style={[s.buttonText, secondary && { color: P.white }]}>
-          {children}
-        </T>
-        <Icon
-          size={19}
-          color={secondary ? P.muted : P.lime}
-          strokeWidth={1.7}
-        />
-      </CyberFrame>
-    </Pressable>
+      {({ hovered, focused }) => {
+        const highlighted = !disabled && (hovered || focused);
+        const accent = highlighted ? P.white : secondary ? P.muted : P.lime;
+        return (
+          <CyberFrame
+            style={[s.button, secondary && s.buttonSecondary]}
+            color={accent}
+            fill={highlighted ? "#18260C" : secondary ? P.ink : "#101B09"}
+            cut={8}
+          >
+            <T
+              style={[
+                s.buttonText,
+                (secondary || highlighted) && { color: P.white },
+              ]}
+            >
+              {children}
+            </T>
+            <Icon size={19} color={accent} strokeWidth={1.7} />
+          </CyberFrame>
+        );
+      }}
+    </MotionPressable>
   );
 }
 
@@ -316,7 +339,7 @@ export function Avatar({
       </View>
       <T
         style={{
-          fontSize: size * 0.38,
+          fontSize: size * 0.33,
           color: manager.color,
           fontFamily: "Display",
           letterSpacing: -0.6,
@@ -337,6 +360,47 @@ export function Radar({
 }) {
   const progress = Math.max(0, Math.min(1, value));
   const circumference = 2 * Math.PI * 38;
+  const { reduceMotion, motionActive } = useMotionSettings();
+  const rotation = useRef(new Animated.Value(0)).current;
+  const progressOffset = useRef(
+    new Animated.Value(circumference * (1 - progress)),
+  ).current;
+
+  useEffect(() => {
+    if (reduceMotion || !motionActive) {
+      rotation.setValue(0);
+      return;
+    }
+    const scan = Animated.loop(
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: 5600,
+        easing: Easing.linear,
+        useNativeDriver: Platform.OS !== "web",
+        isInteraction: false,
+      }),
+    );
+    scan.start();
+    return () => scan.stop();
+  }, [motionActive, reduceMotion, rotation]);
+
+  useEffect(() => {
+    const nextOffset = circumference * (1 - progress);
+    if (reduceMotion || !motionActive) {
+      progressOffset.setValue(nextOffset);
+      return;
+    }
+    const fill = Animated.timing(progressOffset, {
+      toValue: nextOffset,
+      duration: 450,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+      isInteraction: false,
+    });
+    fill.start();
+    return () => fill.stop();
+  }, [circumference, motionActive, progress, progressOffset, reduceMotion]);
+
   return (
     <View
       style={{ width: size, height: size, pointerEvents: "none" }}
@@ -376,14 +440,15 @@ export function Radar({
           strokeWidth={3}
           fill="none"
         />
-        <Circle
+        <AnimatedCircle
           cx={60}
           cy={60}
           r={38}
           stroke={P.lime}
           strokeWidth={3}
           fill="none"
-          strokeDasharray={circumference * progress + " " + circumference}
+          strokeDasharray={[circumference, circumference]}
+          strokeDashoffset={progressOffset}
           transform="rotate(-90 60 60)"
         />
         <Circle
@@ -410,6 +475,48 @@ export function Radar({
         <Rect x={94} y={86} width={3} height={3} fill={P.lime} />
         <Rect x={105} y={19} width={2} height={2} fill={P.muted} />
       </Svg>
+      <Animated.View
+        testID="radar-sweep"
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            pointerEvents: "none",
+            transform: [
+              {
+                rotate: rotation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ["0deg", "360deg"],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <Svg width={size} height={size} viewBox="0 0 120 120">
+          <Path
+            d="M 9.3 78.5 A 54 54 0 0 1 22 22"
+            stroke={P.lime}
+            strokeWidth={1.2}
+            strokeOpacity={0.13}
+            fill="none"
+          />
+          <Path
+            d="M 22 22 A 54 54 0 0 1 46 7.8"
+            stroke={P.lime}
+            strokeWidth={1.2}
+            strokeOpacity={0.35}
+            fill="none"
+          />
+          <Path
+            d="M 46 7.8 A 54 54 0 0 1 60 6"
+            stroke={P.lime}
+            strokeWidth={1.5}
+            strokeOpacity={0.8}
+            fill="none"
+          />
+          <Rect x={58.5} y={4.5} width={3} height={3} fill={P.lime} />
+        </Svg>
+      </Animated.View>
       <View style={[StyleSheet.absoluteFill, s.center]}>
         <Mono
           style={{ fontSize: size * 0.135, color: P.lime, letterSpacing: -0.8 }}
@@ -562,10 +669,10 @@ export const s = StyleSheet.create({
     borderBottomWidth: 1,
   },
   brand: {
-    fontFamily: "Mono",
+    fontFamily: "Display",
     fontSize: 15,
     color: P.lime,
-    letterSpacing: -0.7,
+    letterSpacing: 0.2,
   },
   topLabel: { fontSize: 7, color: P.muted, letterSpacing: 0.35 },
   onlineDot: { width: 4, height: 4, backgroundColor: P.lime },
@@ -608,7 +715,7 @@ export const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: P.line,
   },
-  managerName: { fontSize: 22, fontFamily: "Display", letterSpacing: 0.1 },
+  managerName: { fontSize: 20, fontFamily: "Display", letterSpacing: 0.1 },
   avatar: {
     alignItems: "center",
     justifyContent: "center",
@@ -631,7 +738,12 @@ export const s = StyleSheet.create({
     height: 4,
     backgroundColor: P.lime,
   },
-  sectionTitle: { fontFamily: "Display", fontSize: 20, letterSpacing: 0.7 },
+  sectionTitle: {
+    fontFamily: "Display",
+    fontSize: 17,
+    letterSpacing: 0.1,
+    flexShrink: 1,
+  },
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 9,
@@ -658,7 +770,7 @@ export const s = StyleSheet.create({
     borderRightWidth: 1,
     borderColor: P.lime,
   },
-  cellText: { fontSize: 15, lineHeight: 18, marginVertical: 8 },
+  cellText: { fontSize: 14, lineHeight: 18, marginVertical: 8 },
   cellPoints: { fontSize: 8, color: P.lime },
   reroll: {
     flexDirection: "row",
@@ -685,6 +797,7 @@ export const s = StyleSheet.create({
   },
   button: {
     paddingHorizontal: 17,
+    paddingVertical: 12,
     minHeight: 53,
     flexDirection: "row",
     alignItems: "center",
@@ -695,8 +808,9 @@ export const s = StyleSheet.create({
   buttonText: {
     color: P.lime,
     fontFamily: "Display",
-    fontSize: 18,
-    letterSpacing: 0.6,
+    fontSize: 15,
+    lineHeight: 21,
+    letterSpacing: 0.2,
     flexShrink: 1,
   },
   logRow: {
@@ -740,8 +854,9 @@ export const s = StyleSheet.create({
   },
   pageTitle: {
     fontFamily: "Display",
-    fontSize: 43,
-    letterSpacing: -0.6,
+    fontSize: 32,
+    letterSpacing: 0,
+    flexShrink: 1,
     color: P.white,
   },
   subtitle: { fontSize: 16, color: P.muted, lineHeight: 22, marginTop: 10 },
@@ -856,7 +971,7 @@ export const s = StyleSheet.create({
   sheetContent: { padding: 18, paddingBottom: 32 },
   modalTitle: {
     fontFamily: "Display",
-    fontSize: 33,
+    fontSize: 26,
     marginBottom: 12,
     letterSpacing: -0.3,
   },
@@ -877,8 +992,8 @@ export const s = StyleSheet.create({
   },
   incidentText: {
     fontFamily: "Display",
-    fontSize: 39,
-    lineHeight: 43,
+    fontSize: 29,
+    lineHeight: 36,
     color: P.white,
     marginVertical: 25,
   },

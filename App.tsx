@@ -68,6 +68,12 @@ import {
   P,
   s,
 } from "./src/ui";
+import {
+  MotionProvider,
+  MotionPressable,
+  Reveal,
+  useMotionSettings,
+} from "./src/motion";
 
 const STORAGE = "office-protocol:v1";
 type Tab = "Бинго" | "Манагеры" | "Настройки";
@@ -84,14 +90,18 @@ type Sheet =
 export default function App() {
   return (
     <SafeAreaProvider>
-      <OfficeApp />
+      <MotionProvider>
+        <OfficeApp />
+      </MotionProvider>
     </SafeAreaProvider>
   );
 }
 function OfficeApp() {
+  const { reduceMotion } = useMotionSettings();
   const [fonts, fontError] = useFonts({
-    Display: require("./assets/fonts/RobotoCondensed_700Bold.ttf"),
-    Body: require("./assets/fonts/RobotoCondensed_500Medium.ttf"),
+    Display: require("./assets/fonts/Tektur_600SemiBold.ttf"),
+    Body: require("./assets/fonts/Play-Regular.ttf"),
+    BodyStrong: require("./assets/fonts/Play-Bold.ttf"),
     Mono: require("./assets/fonts/IBMPlexMono_400Regular.ttf"),
   });
   const [game, setGame] = useState<Game>(createGame);
@@ -120,6 +130,12 @@ function OfficeApp() {
   const entries = game.incidents.filter((i) => i.managerId === manager.id);
   const allMarked = board.marked.length === 9;
   const cellWidth = (Math.min(width, 480) - 36 - 12) / 3;
+  useEffect(() => {
+    if (reduceMotion) {
+      pulse.stopAnimation();
+      pulse.setValue(1);
+    }
+  }, [reduceMotion, pulse]);
   useEffect(() => {
     let alive = true;
     AsyncStorage.getItem(STORAGE)
@@ -198,7 +214,7 @@ function OfficeApp() {
       pulse.setValue(0);
       Animated.timing(pulse, {
         toValue: 1,
-        duration: 450,
+        duration: reduceMotion ? 0 : 450,
         useNativeDriver: Platform.OS !== "web",
       }).start();
     } else setToast(`Инцидент зафиксирован. +${event.points} очков`);
@@ -332,686 +348,756 @@ function OfficeApp() {
           contentContainerStyle={s.content}
           showsVerticalScrollIndicator={false}
         >
-          {!!storageError && (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setStorageError("")}
-              style={s.warning}
-            >
-              <T style={{ color: P.white }}>{storageError}</T>
-            </Pressable>
-          )}
-          {tab === "Бинго" && (
-            <>
-              <CyberFrame style={h.hero} color={P.lime} texture>
-                <View style={s.between}>
-                  <Mono style={h.eyebrow}>СЕКТОР 01 / ОФИСНЫЕ АНОМАЛИИ</Mono>
-                  <View style={s.onlineDot} />
-                </View>
-                <View style={[s.between, { marginTop: 12 }]}>
-                  <View style={{ flex: 1 }}>
-                    <T
-                      style={[
-                        h.heroTitle,
-                        { fontSize: Math.min(34, (width - 60) / 9.7) },
-                      ]}
-                    >
-                      КРИНЖ ПОД{`\n`}КОНТРОЛЕМ<T style={{ color: P.lime }}>_</T>
-                    </T>
-                    <Mono style={[h.eyebrow, { color: P.muted, marginTop: 9 }]}>
-                      НАБЛЮДАТЕЛЬ / УР.{" "}
-                      {String(level(board.score)).padStart(2, "0")}
+          <Reveal key={`${tab}:${profile ?? "list"}`}>
+            {!!storageError && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setStorageError("")}
+                style={s.warning}
+              >
+                <T style={{ color: P.white }}>{storageError}</T>
+              </Pressable>
+            )}
+            {tab === "Бинго" && (
+              <>
+                <CyberFrame style={h.hero} color={P.lime} texture>
+                  <View style={s.between}>
+                    <Mono style={h.eyebrow}>СЕКТОР 01 / ОФИСНЫЕ АНОМАЛИИ</Mono>
+                    <View style={s.onlineDot} />
+                  </View>
+                  <View style={[s.between, { marginTop: 12 }]}>
+                    <View style={{ flex: 1 }}>
+                      <T
+                        style={[
+                          h.heroTitle,
+                          {
+                            fontSize: Math.min(
+                              32,
+                              (Math.min(width, 480) -
+                                74 -
+                                Math.min(100, width * 0.23)) /
+                                6.8,
+                            ),
+                          },
+                        ]}
+                      >
+                        КРИНЖ ПОД{`\n`}КОНТРОЛЕМ
+                        <T style={{ color: P.lime }}>_</T>
+                      </T>
+                      <Mono
+                        style={[h.eyebrow, { color: P.muted, marginTop: 9 }]}
+                      >
+                        НАБЛЮДАТЕЛЬ / УР.{" "}
+                        {String(level(board.score)).padStart(2, "0")}
+                      </Mono>
+                    </View>
+                    <Radar
+                      size={Math.min(100, width * 0.23)}
+                      value={board.marked.length / 9}
+                    />
+                  </View>
+                  <View style={h.heroFooter}>
+                    <View style={s.row}>
+                      <Radio size={12} color={P.lime} />
+                      <Mono style={h.eyebrow}>ПРОТОКОЛ АКТИВЕН</Mono>
+                    </View>
+                    <View style={{ width: 85 }}>
+                      <TechnicalStrip />
+                    </View>
+                  </View>
+                </CyberFrame>
+                <View style={s.section}>
+                  <MotionPressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Выбрать манагера"
+                    onPress={() => setSheet("select")}
+                    style={s.managerSelect}
+                  >
+                    <Avatar manager={manager} size={44} />
+                    <View style={{ flex: 1, gap: 3 }}>
+                      <Mono style={s.small}>ОБЪЕКТ НАБЛЮДЕНИЯ</Mono>
+                      <T style={s.managerName}>{manager.name.toUpperCase()}</T>
+                      <T style={{ color: P.muted, fontSize: 13 }}>
+                        {manager.alias}
+                      </T>
+                    </View>
+                    <ChevronDown size={18} color={P.lime} />
+                  </MotionPressable>
+                  <View
+                    style={[s.between, { marginTop: 20, marginBottom: 12 }]}
+                  >
+                    <View style={s.row}>
+                      <Grid3X3 size={16} color={P.lime} strokeWidth={1.5} />
+                      <T style={s.sectionTitle}>МАТРИЦА БИНГО</T>
+                    </View>
+                    <Mono style={{ color: P.lime, fontSize: 11 }}>
+                      {String(board.marked.length).padStart(2, "0")}{" "}
+                      <Mono style={{ color: P.muted, fontSize: 11 }}>/ 09</Mono>
                     </Mono>
                   </View>
-                  <Radar
-                    size={Math.min(100, width * 0.23)}
-                    value={board.marked.length / 9}
-                  />
-                </View>
-                <View style={h.heroFooter}>
-                  <View style={s.row}>
-                    <Radio size={12} color={P.lime} />
-                    <Mono style={h.eyebrow}>ПРОТОКОЛ АКТИВЕН</Mono>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ gap: 6, paddingBottom: 12 }}
+                  >
+                    {[null, ...CATEGORIES].map((c) => (
+                      <MotionPressable
+                        key={c ?? "all"}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: category === c }}
+                        aria-pressed={category === c}
+                        onPress={() => setCategory(c)}
+                        style={[s.chip, category === c && s.chipActive]}
+                      >
+                        <Mono
+                          style={[
+                            s.chipText,
+                            category === c && { color: P.ink },
+                          ]}
+                        >
+                          {c ?? "Все события"}
+                        </Mono>
+                      </MotionPressable>
+                    ))}
+                  </ScrollView>
+                  <View style={s.grid}>
+                    {board.cards.map((id, index) => {
+                      const c = game.cards.find((c) => c.id === id)!;
+                      const checked = board.marked.includes(id);
+                      const dim = category !== null && c.category !== category;
+                      return (
+                        <MotionPressable
+                          key={`${manager.id}:${id}`}
+                          enterDelay={index * 35}
+                          confirmed={checked}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${c.text}, ${c.points} очков${checked ? ", зафиксировано" : ""}`}
+                          accessibilityState={{ selected: checked }}
+                          aria-pressed={checked}
+                          onPress={() => openCard(id)}
+                          style={[
+                            s.cell,
+                            {
+                              width: cellWidth,
+                              minHeight: Math.max(126, cellWidth * 1.12),
+                              padding: 0,
+                              borderWidth: 0,
+                            },
+                            dim && { opacity: 0.3 },
+                          ]}
+                        >
+                          {({ hovered, focused }) => (
+                            <CyberFrame
+                              cut={7}
+                              color={
+                                checked || hovered || focused
+                                  ? P.lime
+                                  : "#3D5041"
+                              }
+                              fill={checked ? P.lime : P.panel}
+                              style={{
+                                flex: 1,
+                                padding: 9,
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <View style={s.between}>
+                                <Mono
+                                  style={[
+                                    s.cellIndex,
+                                    checked && { color: "#496000" },
+                                  ]}
+                                >
+                                  {["А", "Б", "В"][Math.floor(index / 3)]}
+                                  {(index % 3) + 1}
+                                </Mono>
+                                {checked ? (
+                                  <Check size={14} color={P.ink} />
+                                ) : (
+                                  <View style={s.cellCorner} />
+                                )}
+                              </View>
+                              <T
+                                style={[
+                                  s.cellText,
+                                  width < 360 && {
+                                    fontSize: 13,
+                                    lineHeight: 17,
+                                  },
+                                  checked && { color: P.ink },
+                                ]}
+                              >
+                                {c.text}
+                              </T>
+                              <View style={s.between}>
+                                <Mono
+                                  style={[
+                                    s.cellPoints,
+                                    checked && { color: P.ink },
+                                  ]}
+                                >
+                                  {checked ? "ЗАЧТЕНО" : `+${c.points} ОЧ.`}
+                                </Mono>
+                                {!checked && (
+                                  <View style={{ width: 23 }}>
+                                    <Segments
+                                      value={c.points / 200}
+                                      total={4}
+                                      color={c.points === 200 ? P.red : P.lime}
+                                    />
+                                  </View>
+                                )}
+                              </View>
+                            </CyberFrame>
+                          )}
+                        </MotionPressable>
+                      );
+                    })}
                   </View>
-                  <View style={{ width: 85 }}>
+                  <MotionPressable
+                    accessibilityRole="button"
+                    onPress={() => {
+                      setGame(allMarked ? newRound(game) : reroll(game));
+                      setCategory(null);
+                      setToast(
+                        allMarked
+                          ? "Новая смена началась. Очки сохранены"
+                          : "Неотмеченные карточки обновлены",
+                      );
+                      vibrate();
+                    }}
+                    style={s.reroll}
+                  >
+                    <RefreshCw size={15} color={P.muted} />
+                    <Mono style={{ color: P.muted, fontSize: 10 }}>
+                      {allMarked
+                        ? "НАЧАТЬ НОВУЮ СМЕНУ"
+                        : "ОБНОВИТЬ НЕЗАЧЁРКНУТЫЕ"}
+                    </Mono>
+                  </MotionPressable>
+                  <CyberFrame style={s.scorePanel}>
+                    <View style={[s.between, { marginBottom: 17 }]}>
+                      <View style={s.row}>
+                        <Zap size={18} color={P.lime} />
+                        <T style={{ fontSize: 13, fontFamily: "BodyStrong" }}>
+                          НАКОПЛЕНО КРИНЖА
+                        </T>
+                      </View>
+                      <T
+                        style={{
+                          fontSize: 25,
+                          color: P.lime,
+                          fontFamily: "Display",
+                        }}
+                      >
+                        {board.score}
+                        <T style={{ fontSize: 11, color: P.muted }}> ОЧ.</T>
+                      </T>
+                    </View>
+                    <Meter score={board.score} />
+                    <View style={[s.between, { marginTop: 10 }]}>
+                      <Mono style={{ fontSize: 9, color: P.muted }}>
+                        {rank(board.score).toUpperCase()}
+                      </Mono>
+                      <Mono style={{ fontSize: 9, color: P.muted }}>
+                        ДО УР. {level(board.score) + 1}:{" "}
+                        {1000 - (board.score % 1000)}
+                      </Mono>
+                    </View>
+                  </CyberFrame>
+                  <View style={{ marginTop: 16 }}>
+                    <Button
+                      secondary
+                      onPress={() => setSheet("report")}
+                      icon={FileText}
+                    >
+                      СФОРМИРОВАТЬ РАПОРТ
+                    </Button>
+                  </View>
+                  <View
+                    style={[s.between, { marginTop: 28, marginBottom: 14 }]}
+                  >
+                    <T style={s.sectionTitle}>ЖУРНАЛ СОБЫТИЙ</T>
+                    <Mono style={s.small}>
+                      {String(entries.length).padStart(2, "0")}
+                    </Mono>
+                  </View>
+                  {entries.length ? (
+                    entries.slice(0, 3).map((i) => (
+                      <View key={i.id} style={s.logRow}>
+                        <View style={s.logDot} />
+                        <View style={{ flex: 1 }}>
+                          <T style={{ fontSize: 15 }}>{i.text}</T>
+                          <Mono style={[s.small, { marginTop: 5 }]}>
+                            {new Date(i.at).toLocaleDateString("ru-RU", {
+                              day: "2-digit",
+                              month: "2-digit",
+                            })}{" "}
+                            /{" "}
+                            {new Date(i.at).toLocaleTimeString("ru-RU", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </Mono>
+                        </View>
+                        <Mono style={{ color: P.lime, fontSize: 11 }}>
+                          +{i.points + i.bonus}
+                        </Mono>
+                      </View>
+                    ))
+                  ) : (
+                    <View style={s.emptyLog}>
+                      <Radio size={21} color={P.muted} />
+                      <View style={{ flex: 1 }}>
+                        <T style={{ fontSize: 16 }}>
+                          Пока подозрительно спокойно
+                        </T>
+                        <T
+                          style={{ fontSize: 13, color: P.muted, marginTop: 3 }}
+                        >
+                          Заметили выходку? Нажмите на карточку.
+                        </T>
+                      </View>
+                    </View>
+                  )}
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => setSheet("rules")}
+                    style={s.rulesLink}
+                  >
+                    <Mono style={{ color: P.muted, fontSize: 10 }}>
+                      КАК РАБОТАЕТ ПРОТОКОЛ
+                    </Mono>
+                    <ArrowUpRight size={14} color={P.muted} />
+                  </Pressable>
+                </View>
+              </>
+            )}
+            {tab === "Манагеры" && !profile && (
+              <>
+                <View style={s.pageHeader}>
+                  <Mono style={s.small}>
+                    БАЗА ОБЪЕКТОВ /{" "}
+                    {String(game.managers.length).padStart(2, "0")}
+                  </Mono>
+                  <View style={[s.between, { marginTop: 8 }]}>
+                    <T style={s.pageTitle}>МАНАГЕРЫ</T>
+                    {game.admin && (
+                      <MotionPressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Добавить манагера"
+                        onPress={() => editManager()}
+                        style={s.squareButton}
+                      >
+                        <Plus size={24} color={P.ink} />
+                      </MotionPressable>
+                    )}
+                  </View>
+                  <T style={s.subtitle}>
+                    Лица, стоящие за фразой «тут на пять минут».
+                  </T>
+                  <View style={{ marginTop: 18 }}>
                     <TechnicalStrip />
                   </View>
                 </View>
-              </CyberFrame>
-              <View style={s.section}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Выбрать манагера"
-                  onPress={() => setSheet("select")}
-                  style={s.managerSelect}
-                >
-                  <Avatar manager={manager} size={44} />
-                  <View style={{ flex: 1, gap: 3 }}>
-                    <Mono style={s.small}>ОБЪЕКТ НАБЛЮДЕНИЯ</Mono>
-                    <T style={s.managerName}>{manager.name.toUpperCase()}</T>
-                    <T style={{ color: P.muted, fontSize: 13 }}>
-                      {manager.alias}
-                    </T>
-                  </View>
-                  <ChevronDown size={18} color={P.lime} />
-                </Pressable>
-                <View style={[s.between, { marginTop: 20, marginBottom: 12 }]}>
-                  <View style={s.row}>
-                    <Grid3X3 size={16} color={P.lime} strokeWidth={1.5} />
-                    <T style={s.sectionTitle}>МАТРИЦА БИНГО</T>
-                  </View>
-                  <Mono style={{ color: P.lime, fontSize: 11 }}>
-                    {String(board.marked.length).padStart(2, "0")}{" "}
-                    <Mono style={{ color: P.muted, fontSize: 11 }}>/ 09</Mono>
-                  </Mono>
-                </View>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 6, paddingBottom: 12 }}
-                >
-                  {[null, ...CATEGORIES].map((c) => (
-                    <Pressable
-                      key={c ?? "all"}
+                <View style={s.section}>
+                  {game.managers.map((m, i) => (
+                    <MotionPressable
                       accessibilityRole="button"
-                      accessibilityState={{ selected: category === c }}
-                      aria-pressed={category === c}
-                      onPress={() => setCategory(c)}
-                      style={[s.chip, category === c && s.chipActive]}
+                      accessibilityLabel={`Досье: ${m.name}`}
+                      key={m.id}
+                      enterDelay={i * 60}
+                      onPress={() => setProfile(m.id)}
+                      style={{ marginBottom: 12 }}
                     >
-                      <Mono
-                        style={[s.chipText, category === c && { color: P.ink }]}
-                      >
-                        {c ?? "Все события"}
-                      </Mono>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-                <View style={s.grid}>
-                  {board.cards.map((id, index) => {
-                    const c = game.cards.find((c) => c.id === id)!;
-                    const checked = board.marked.includes(id);
-                    const dim = category !== null && c.category !== category;
-                    return (
-                      <Pressable
-                        key={id}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${c.text}, ${c.points} очков${checked ? ", зафиксировано" : ""}`}
-                        accessibilityState={{ selected: checked }}
-                        aria-pressed={checked}
-                        onPress={() => openCard(id)}
-                        style={({ pressed }) => [
-                          s.cell,
-                          {
-                            width: cellWidth,
-                            minHeight: Math.max(126, cellWidth * 1.12),
-                            padding: 0,
-                            borderWidth: 0,
-                          },
-                          dim && { opacity: 0.3 },
-                          pressed && { transform: [{ scale: 0.97 }] },
-                        ]}
-                      >
+                      {({ hovered, focused }) => (
                         <CyberFrame
-                          cut={7}
-                          color={checked ? P.lime : "#3D5041"}
-                          fill={checked ? P.lime : P.panel}
-                          style={{
-                            flex: 1,
-                            padding: 9,
-                            justifyContent: "space-between",
-                          }}
+                          style={[s.managerCard, { marginBottom: 0 }]}
+                          color={
+                            m.id === manager.id || hovered || focused
+                              ? P.lime
+                              : P.line
+                          }
                         >
-                          <View style={s.between}>
+                          <View style={[s.between, { marginBottom: 18 }]}>
                             <Mono
                               style={[
-                                s.cellIndex,
-                                checked && { color: "#496000" },
+                                s.small,
+                                {
+                                  color: m.id === manager.id ? P.lime : P.muted,
+                                },
                               ]}
                             >
-                              {["А", "Б", "В"][Math.floor(index / 3)]}
-                              {(index % 3) + 1}
+                              {String(i + 1).padStart(3, "0")} /{" "}
+                              {m.id === manager.id
+                                ? "ПОД НАБЛЮДЕНИЕМ"
+                                : "ДОСЬЕ ОБЪЕКТА"}
                             </Mono>
-                            {checked ? (
-                              <Check size={14} color={P.ink} />
-                            ) : (
-                              <View style={s.cellCorner} />
-                            )}
+                            <Tag>УР. {level(game.boards[m.id].score)}</Tag>
                           </View>
-                          <T
-                            style={[
-                              s.cellText,
-                              width < 360 && { fontSize: 14, lineHeight: 17 },
-                              checked && { color: P.ink },
-                            ]}
-                          >
-                            {c.text}
-                          </T>
-                          <View style={s.between}>
-                            <Mono
-                              style={[
-                                s.cellPoints,
-                                checked && { color: P.ink },
-                              ]}
-                            >
-                              {checked ? "ЗАЧТЕНО" : `+${c.points} ОЧ.`}
-                            </Mono>
-                            {!checked && (
-                              <View style={{ width: 23 }}>
-                                <Segments
-                                  value={c.points / 200}
-                                  total={4}
-                                  color={c.points === 200 ? P.red : P.lime}
-                                />
-                              </View>
-                            )}
+                          <View style={s.row}>
+                            <Avatar manager={m} size={64} />
+                            <View style={{ flex: 1, gap: 4 }}>
+                              <T
+                                style={{ fontFamily: "Display", fontSize: 24 }}
+                              >
+                                {m.name.toUpperCase()}
+                              </T>
+                              <T style={{ color: P.muted, fontSize: 14 }}>
+                                {m.alias}
+                              </T>
+                            </View>
+                            <ArrowUpRight size={23} color={P.lime} />
+                          </View>
+                          <View style={{ marginTop: 20 }}>
+                            <Meter score={game.boards[m.id].score} />
+                          </View>
+                          <View style={[h.dossierFooter, { marginTop: 14 }]}>
+                            <Mono style={s.small}>{m.role.toUpperCase()}</Mono>
+                            <Crosshair size={13} color={P.muted} />
                           </View>
                         </CyberFrame>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => {
-                    setGame(allMarked ? newRound(game) : reroll(game));
-                    setCategory(null);
-                    setToast(
-                      allMarked
-                        ? "Новая смена началась. Очки сохранены"
-                        : "Неотмеченные карточки обновлены",
-                    );
-                    vibrate();
-                  }}
-                  style={s.reroll}
-                >
-                  <RefreshCw size={15} color={P.muted} />
-                  <Mono style={{ color: P.muted, fontSize: 10 }}>
-                    {allMarked
-                      ? "НАЧАТЬ НОВУЮ СМЕНУ"
-                      : "ОБНОВИТЬ НЕЗАЧЁРКНУТЫЕ"}
-                  </Mono>
-                </Pressable>
-                <CyberFrame style={s.scorePanel}>
-                  <View style={[s.between, { marginBottom: 17 }]}>
-                    <View style={s.row}>
-                      <Zap size={18} color={P.lime} />
-                      <T style={{ fontSize: 17 }}>НАКОПЛЕНО КРИНЖА</T>
-                    </View>
-                    <T
-                      style={{
-                        fontSize: 25,
-                        color: P.lime,
-                        fontFamily: "Display",
-                      }}
-                    >
-                      {board.score}
-                      <T style={{ fontSize: 11, color: P.muted }}> ОЧ.</T>
-                    </T>
-                  </View>
-                  <Meter score={board.score} />
-                  <View style={[s.between, { marginTop: 10 }]}>
-                    <Mono style={{ fontSize: 9, color: P.muted }}>
-                      {rank(board.score).toUpperCase()}
-                    </Mono>
-                    <Mono style={{ fontSize: 9, color: P.muted }}>
-                      ДО УР. {level(board.score) + 1}:{" "}
-                      {1000 - (board.score % 1000)}
-                    </Mono>
-                  </View>
-                </CyberFrame>
-                <View style={{ marginTop: 16 }}>
-                  <Button
-                    secondary
-                    onPress={() => setSheet("report")}
-                    icon={FileText}
-                  >
-                    СФОРМИРОВАТЬ РАПОРТ
-                  </Button>
-                </View>
-                <View style={[s.between, { marginTop: 28, marginBottom: 14 }]}>
-                  <T style={s.sectionTitle}>ЖУРНАЛ СОБЫТИЙ</T>
-                  <Mono style={s.small}>
-                    {String(entries.length).padStart(2, "0")}
-                  </Mono>
-                </View>
-                {entries.length ? (
-                  entries.slice(0, 3).map((i) => (
-                    <View key={i.id} style={s.logRow}>
-                      <View style={s.logDot} />
-                      <View style={{ flex: 1 }}>
-                        <T style={{ fontSize: 15 }}>{i.text}</T>
-                        <Mono style={[s.small, { marginTop: 5 }]}>
-                          {new Date(i.at).toLocaleDateString("ru-RU", {
-                            day: "2-digit",
-                            month: "2-digit",
-                          })}{" "}
-                          /{" "}
-                          {new Date(i.at).toLocaleTimeString("ru-RU", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </Mono>
-                      </View>
-                      <Mono style={{ color: P.lime, fontSize: 11 }}>
-                        +{i.points + i.bonus}
-                      </Mono>
-                    </View>
-                  ))
-                ) : (
-                  <View style={s.emptyLog}>
-                    <Radio size={21} color={P.muted} />
-                    <View style={{ flex: 1 }}>
-                      <T style={{ fontSize: 16 }}>
-                        Пока подозрительно спокойно
-                      </T>
-                      <T style={{ fontSize: 13, color: P.muted, marginTop: 3 }}>
-                        Заметили выходку? Нажмите на карточку.
-                      </T>
-                    </View>
-                  </View>
-                )}
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => setSheet("rules")}
-                  style={s.rulesLink}
-                >
-                  <Mono style={{ color: P.muted, fontSize: 10 }}>
-                    КАК РАБОТАЕТ ПРОТОКОЛ
-                  </Mono>
-                  <ArrowUpRight size={14} color={P.muted} />
-                </Pressable>
-              </View>
-            </>
-          )}
-          {tab === "Манагеры" && !profile && (
-            <>
-              <View style={s.pageHeader}>
-                <Mono style={s.small}>
-                  БАЗА ОБЪЕКТОВ /{" "}
-                  {String(game.managers.length).padStart(2, "0")}
-                </Mono>
-                <View style={[s.between, { marginTop: 8 }]}>
-                  <T style={s.pageTitle}>МАНАГЕРЫ</T>
-                  {game.admin && (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Добавить манагера"
-                      onPress={() => editManager()}
-                      style={s.squareButton}
-                    >
-                      <Plus size={24} color={P.ink} />
-                    </Pressable>
-                  )}
-                </View>
-                <T style={s.subtitle}>
-                  Лица, стоящие за фразой «тут на пять минут».
-                </T>
-                <View style={{ marginTop: 18 }}>
-                  <TechnicalStrip />
-                </View>
-              </View>
-              <View style={s.section}>
-                {game.managers.map((m, i) => (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`Досье: ${m.name}`}
-                    key={m.id}
-                    onPress={() => setProfile(m.id)}
-                    style={({ pressed }) => [
-                      { marginBottom: 12, opacity: pressed ? 0.75 : 1 },
-                    ]}
-                  >
-                    <CyberFrame
-                      style={[s.managerCard, { marginBottom: 0 }]}
-                      color={m.id === manager.id ? P.lime : P.line}
-                    >
-                      <View style={[s.between, { marginBottom: 18 }]}>
-                        <Mono
-                          style={[
-                            s.small,
-                            { color: m.id === manager.id ? P.lime : P.muted },
-                          ]}
-                        >
-                          {String(i + 1).padStart(3, "0")} /{" "}
-                          {m.id === manager.id
-                            ? "ПОД НАБЛЮДЕНИЕМ"
-                            : "ДОСЬЕ ОБЪЕКТА"}
-                        </Mono>
-                        <Tag>УР. {level(game.boards[m.id].score)}</Tag>
-                      </View>
+                      )}
+                    </MotionPressable>
+                  ))}
+                  {game.managers.length >= 2 && (
+                    <CyberFrame style={s.pairing} color={P.red}>
                       <View style={s.row}>
-                        <Avatar manager={m} size={64} />
-                        <View style={{ flex: 1, gap: 4 }}>
-                          <T style={{ fontFamily: "Display", fontSize: 28 }}>
-                            {m.name.toUpperCase()}
-                          </T>
-                          <T style={{ color: P.muted, fontSize: 14 }}>
-                            {m.alias}
-                          </T>
+                        <TriangleAlert size={15} color={P.red} />
+                        <Mono style={[s.small, { color: P.red }]}>
+                          АНАЛИЗ СОВМЕСТИМОСТИ
+                        </Mono>
+                      </View>
+                      <View
+                        style={[
+                          s.between,
+                          { marginTop: 15, alignItems: "flex-start" },
+                        ]}
+                      >
+                        <T
+                          style={{
+                            fontFamily: "Display",
+                            fontSize: width < 360 ? 21 : 26,
+                            color: P.white,
+                            lineHeight: 30,
+                            flex: 1,
+                          }}
+                        >
+                          ОНИ БЫ{`\n`}СРАБОТАЛИСЬ.
+                        </T>
+                        <View style={{ flexDirection: "row" }}>
+                          <Avatar manager={game.managers[0]} size={46} />
+                          <View style={{ marginLeft: -10, marginTop: 20 }}>
+                            <Avatar manager={game.managers[1]} size={46} />
+                          </View>
                         </View>
-                        <ArrowUpRight size={23} color={P.lime} />
                       </View>
-                      <View style={{ marginTop: 20 }}>
-                        <Meter score={game.boards[m.id].score} />
-                      </View>
-                      <View style={[h.dossierFooter, { marginTop: 14 }]}>
-                        <Mono style={s.small}>{m.role.toUpperCase()}</Mono>
-                        <Crosshair size={13} color={P.muted} />
-                      </View>
-                    </CyberFrame>
-                  </Pressable>
-                ))}
-                {game.managers.length >= 2 && (
-                  <CyberFrame style={s.pairing} color={P.red}>
-                    <View style={s.row}>
-                      <TriangleAlert size={15} color={P.red} />
-                      <Mono style={[s.small, { color: P.red }]}>
-                        АНАЛИЗ СОВМЕСТИМОСТИ
-                      </Mono>
-                    </View>
-                    <View style={[s.between, { marginTop: 15 }]}>
                       <T
                         style={{
-                          fontFamily: "Display",
-                          fontSize: 32,
-                          color: P.white,
-                          lineHeight: 32,
+                          color: P.muted,
+                          marginTop: 15,
+                          fontSize: 15,
+                          lineHeight: 21,
                         }}
                       >
-                        ОНИ БЫ{`\n`}СРАБОТАЛИСЬ.
+                        {game.managers[0].name} назначает созвоны.{" "}
+                        {game.managers[1].name} приносит правки. Вечный
+                        двигатель найден.
                       </T>
-                      <View style={{ flexDirection: "row" }}>
-                        <Avatar manager={game.managers[0]} size={46} />
-                        <View style={{ marginLeft: -10, marginTop: 20 }}>
-                          <Avatar manager={game.managers[1]} size={46} />
+                      <Mono
+                        style={{ fontSize: 9, color: P.red, marginTop: 18 }}
+                      >
+                        ВЕРДИКТ: ОПАСНО ДЛЯ ДЕДЛАЙНА
+                      </Mono>
+                    </CyberFrame>
+                  )}
+                  <Mono style={s.footerNote}>
+                    ВСЕ ПЕРСОНАЖИ ВЫМЫШЛЕНЫ.{`\n`}СОВПАДЕНИЯ — ПОВОД ДЛЯ БИНГО.
+                  </Mono>
+                </View>
+              </>
+            )}
+            {tab === "Манагеры" &&
+              profile &&
+              (() => {
+                const m = game.managers.find((m) => m.id === profile)!;
+                const b = game.boards[m.id];
+                const events = game.incidents.filter(
+                  (i) => i.managerId === m.id,
+                );
+                return (
+                  <View style={s.section}>
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => setProfile(null)}
+                      style={s.back}
+                    >
+                      <ArrowLeft size={19} color={P.lime} />
+                      <Mono style={{ color: P.lime, fontSize: 11 }}>
+                        К СПИСКУ ОБЪЕКТОВ
+                      </Mono>
+                    </Pressable>
+                    <CyberFrame style={s.profilePanel}>
+                      <View style={s.between}>
+                        <Mono style={[s.small, { color: P.lime }]}>
+                          ЛИЧНОЕ ДЕЛО /{" "}
+                          {String(game.managers.indexOf(m) + 1).padStart(
+                            3,
+                            "0",
+                          )}
+                        </Mono>
+                        <Crosshair size={20} color={P.lime} />
+                      </View>
+                      <View
+                        style={[
+                          s.row,
+                          {
+                            paddingVertical: 23,
+                            gap: 12,
+                            alignItems: "flex-start",
+                          },
+                        ]}
+                      >
+                        <Avatar manager={m} size={width < 360 ? 70 : 94} />
+                        <View style={{ flex: 1, gap: 8 }}>
+                          <T
+                            style={{
+                              fontFamily: "Display",
+                              fontSize: width < 360 ? 25 : 30,
+                            }}
+                          >
+                            {m.name.toUpperCase()}
+                          </T>
+                          <T style={{ color: P.lime, fontSize: 17 }}>
+                            {m.alias}
+                          </T>
+                          <Mono style={[s.small, { lineHeight: 15 }]}>
+                            {m.role.toUpperCase()}
+                          </Mono>
                         </View>
                       </View>
+                      <TechnicalStrip />
+                      <View style={s.stats}>
+                        <View>
+                          <T style={s.statNumber}>
+                            {String(level(b.score)).padStart(2, "0")}
+                          </T>
+                          <Mono style={s.small}>УРОВЕНЬ</Mono>
+                        </View>
+                        <View>
+                          <T style={s.statNumber}>
+                            {String(events.length).padStart(2, "0")}
+                          </T>
+                          <Mono style={s.small}>ИНЦИДЕНТЫ</Mono>
+                        </View>
+                        <View>
+                          <T style={s.statNumber}>{b.score}</T>
+                          <Mono style={s.small}>КРИНЖ</Mono>
+                        </View>
+                      </View>
+                      <Meter score={b.score} />
+                    </CyberFrame>
+                    <T
+                      style={[
+                        s.sectionTitle,
+                        { marginTop: 28, marginBottom: 15 },
+                      ]}
+                    >
+                      ПРОФИЛЬ АНОМАЛИЙ
+                    </T>
+                    {CATEGORIES.map((c) => (
+                      <View key={c} style={s.settingRow}>
+                        <T>{c}</T>
+                        <View style={[s.row, { width: "48%" }]}>
+                          <View style={{ flex: 1 }}>
+                            <Segments
+                              value={
+                                events.filter((i) => i.category === c).length /
+                                Math.max(10, events.length)
+                              }
+                              total={10}
+                            />
+                          </View>
+                          <Mono style={{ color: P.lime, fontSize: 12 }}>
+                            {String(
+                              events.filter((i) => i.category === c).length,
+                            ).padStart(2, "0")}
+                          </Mono>
+                        </View>
+                      </View>
+                    ))}
+                    <T style={[s.subtitle, { marginBottom: 22 }]}>
+                      {events.length
+                        ? "Паттерны обнаружены. Продолжаем наблюдение."
+                        : "Данных пока мало. Откройте бинго и зафиксируйте первый инцидент."}
+                    </T>
+                    <Button
+                      onPress={() => {
+                        selectManager(m.id);
+                        setProfile(null);
+                        setTab("Бинго");
+                      }}
+                      icon={Grid3X3}
+                    >
+                      ОТКРЫТЬ БИНГО МАНАГЕРА
+                    </Button>
+                    {game.admin && (
+                      <View style={{ marginTop: 12 }}>
+                        <Button
+                          secondary
+                          icon={SlidersHorizontal}
+                          onPress={() => editManager(m)}
+                        >
+                          РЕДАКТИРОВАТЬ ДОСЬЕ
+                        </Button>
+                      </View>
+                    )}
+                  </View>
+                );
+              })()}
+            {tab === "Настройки" && (
+              <>
+                <View style={s.pageHeader}>
+                  <Mono style={s.small}>КОНФИГУРАЦИЯ / ЛОКАЛЬНЫЙ УЗЕЛ</Mono>
+                  <T style={[s.pageTitle, { marginTop: 8 }]}>НАСТРОЙКИ</T>
+                  <T style={s.subtitle}>Ваш офис. Ваши правила протокола.</T>
+                  <View style={{ marginTop: 18 }}>
+                    <TechnicalStrip />
+                  </View>
+                </View>
+                <View style={s.section}>
+                  <CyberFrame style={s.adminPanel}>
+                    <Shield size={28} color={P.lime} />
+                    <View style={{ flex: 1 }}>
+                      <T style={{ fontFamily: "BodyStrong", fontSize: 17 }}>
+                        {game.admin ? "ЛОКАЛЬНЫЙ АДМИН" : "НАБЛЮДАТЕЛЬ"}
+                      </T>
+                      <T style={{ fontSize: 14, color: P.muted, marginTop: 5 }}>
+                        Управление досье и общей базой карточек
+                      </T>
+                    </View>
+                    <Tag>01</Tag>
+                  </CyberFrame>
+                  <View style={s.settingRow}>
+                    <View style={{ flex: 1 }}>
+                      <T style={{ fontFamily: "BodyStrong", fontSize: 16 }}>
+                        Режим администратора
+                      </T>
+                      <T style={s.settingHelp}>
+                        Отключите, чтобы оставить только игру
+                      </T>
+                    </View>
+                    <ProtocolSwitch
+                      accessibilityLabel="Режим администратора"
+                      value={game.admin}
+                      onValueChange={(admin) =>
+                        setGame((g) => ({ ...g, admin }))
+                      }
+                    />
+                  </View>
+                  <View style={s.settingRow}>
+                    <View style={{ flex: 1 }}>
+                      <T style={{ fontFamily: "BodyStrong", fontSize: 16 }}>
+                        Тактильный отклик
+                      </T>
+                      <T style={s.settingHelp}>Короткий импульс при фиксации</T>
+                    </View>
+                    <ProtocolSwitch
+                      accessibilityLabel="Тактильный отклик"
+                      value={game.haptics}
+                      onValueChange={(haptics) =>
+                        setGame((g) => ({ ...g, haptics }))
+                      }
+                    />
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => setSheet("library")}
+                    style={s.settingRow}
+                  >
+                    <View style={s.row}>
+                      <Grid3X3 size={21} color={P.lime} />
+                      <View>
+                        <T style={{ fontSize: 18 }}>База карточек</T>
+                        <T style={s.settingHelp}>
+                          Карточек: {game.cards.length} · общий набор
+                        </T>
+                      </View>
+                    </View>
+                    <ChevronRight size={20} color={P.muted} />
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => setSheet("rules")}
+                    style={s.settingRow}
+                  >
+                    <View style={s.row}>
+                      <FileText size={21} color={P.lime} />
+                      <T style={{ fontSize: 18 }}>Правила протокола</T>
+                    </View>
+                    <ChevronRight size={20} color={P.muted} />
+                  </Pressable>
+                  <CyberFrame
+                    style={[s.scorePanel, { marginTop: 25 }]}
+                    color={P.line}
+                  >
+                    <View style={s.row}>
+                      <LockKeyhole size={18} color={P.lime} />
+                      <Mono style={{ color: P.lime, fontSize: 10 }}>
+                        ДАННЫЕ НА ЭТОМ УСТРОЙСТВЕ
+                      </Mono>
                     </View>
                     <T
                       style={{
                         color: P.muted,
-                        marginTop: 15,
                         fontSize: 15,
+                        marginTop: 13,
                         lineHeight: 21,
                       }}
                     >
-                      {game.managers[0].name} назначает созвоны.{" "}
-                      {game.managers[1].name} приносит правки. Вечный двигатель
-                      найден.
+                      Прогресс сохраняется автоматически. Аккаунт и интернет для
+                      игры не нужны. Удаление приложения удалит локальную
+                      историю.
                     </T>
-                    <Mono style={{ fontSize: 9, color: P.red, marginTop: 18 }}>
-                      ВЕРДИКТ: ОПАСНО ДЛЯ ДЕДЛАЙНА
-                    </Mono>
                   </CyberFrame>
-                )}
-                <Mono style={s.footerNote}>
-                  ВСЕ ПЕРСОНАЖИ ВЫМЫШЛЕНЫ.{`\n`}СОВПАДЕНИЯ — ПОВОД ДЛЯ БИНГО.
-                </Mono>
-              </View>
-            </>
-          )}
-          {tab === "Манагеры" &&
-            profile &&
-            (() => {
-              const m = game.managers.find((m) => m.id === profile)!;
-              const b = game.boards[m.id];
-              const events = game.incidents.filter((i) => i.managerId === m.id);
-              return (
-                <View style={s.section}>
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() => setProfile(null)}
-                    style={s.back}
+                    onPress={() => setSheet("reset")}
+                    style={[s.settingRow, { marginTop: 15 }]}
                   >
-                    <ArrowLeft size={19} color={P.lime} />
-                    <Mono style={{ color: P.lime, fontSize: 11 }}>
-                      К СПИСКУ ОБЪЕКТОВ
-                    </Mono>
+                    <T style={{ color: P.red, fontSize: 17 }}>
+                      Сбросить весь прогресс
+                    </T>
+                    <RefreshCw color={P.red} size={18} />
                   </Pressable>
-                  <CyberFrame style={s.profilePanel}>
-                    <View style={s.between}>
-                      <Mono style={[s.small, { color: P.lime }]}>
-                        ЛИЧНОЕ ДЕЛО /{" "}
-                        {String(game.managers.indexOf(m) + 1).padStart(3, "0")}
-                      </Mono>
-                      <Crosshair size={20} color={P.lime} />
-                    </View>
-                    <View
-                      style={[
-                        s.row,
-                        {
-                          paddingVertical: 23,
-                          gap: 18,
-                          alignItems: "flex-start",
-                        },
-                      ]}
-                    >
-                      <Avatar manager={m} size={94} />
-                      <View style={{ flex: 1, gap: 8 }}>
-                        <T
-                          style={{
-                            fontFamily: "Display",
-                            fontSize: 36,
-                          }}
-                        >
-                          {m.name.toUpperCase()}
-                        </T>
-                        <T style={{ color: P.lime, fontSize: 17 }}>{m.alias}</T>
-                        <Mono style={[s.small, { lineHeight: 15 }]}>
-                          {m.role.toUpperCase()}
-                        </Mono>
-                      </View>
-                    </View>
-                    <TechnicalStrip />
-                    <View style={s.stats}>
-                      <View>
-                        <T style={s.statNumber}>
-                          {String(level(b.score)).padStart(2, "0")}
-                        </T>
-                        <Mono style={s.small}>УРОВЕНЬ</Mono>
-                      </View>
-                      <View>
-                        <T style={s.statNumber}>
-                          {String(events.length).padStart(2, "0")}
-                        </T>
-                        <Mono style={s.small}>ИНЦИДЕНТЫ</Mono>
-                      </View>
-                      <View>
-                        <T style={s.statNumber}>{b.score}</T>
-                        <Mono style={s.small}>КРИНЖ</Mono>
-                      </View>
-                    </View>
-                    <Meter score={b.score} />
-                  </CyberFrame>
-                  <T
-                    style={[
-                      s.sectionTitle,
-                      { marginTop: 28, marginBottom: 15 },
-                    ]}
-                  >
-                    ПРОФИЛЬ АНОМАЛИЙ
-                  </T>
-                  {CATEGORIES.map((c) => (
-                    <View key={c} style={s.settingRow}>
-                      <T>{c}</T>
-                      <View style={[s.row, { width: "48%" }]}>
-                        <View style={{ flex: 1 }}>
-                          <Segments
-                            value={
-                              events.filter((i) => i.category === c).length /
-                              Math.max(10, events.length)
-                            }
-                            total={10}
-                          />
-                        </View>
-                        <Mono style={{ color: P.lime, fontSize: 12 }}>
-                          {String(
-                            events.filter((i) => i.category === c).length,
-                          ).padStart(2, "0")}
-                        </Mono>
-                      </View>
-                    </View>
-                  ))}
-                  <T style={[s.subtitle, { marginBottom: 22 }]}>
-                    {events.length
-                      ? "Паттерны обнаружены. Продолжаем наблюдение."
-                      : "Данных пока мало. Откройте бинго и зафиксируйте первый инцидент."}
-                  </T>
-                  <Button
-                    onPress={() => {
-                      selectManager(m.id);
-                      setProfile(null);
-                      setTab("Бинго");
+                  <View
+                    style={{
+                      paddingVertical: 40,
+                      alignItems: "center",
+                      gap: 8,
                     }}
-                    icon={Grid3X3}
                   >
-                    ОТКРЫТЬ БИНГО МАНАГЕРА
-                  </Button>
-                  {game.admin && (
-                    <View style={{ marginTop: 12 }}>
-                      <Button
-                        secondary
-                        icon={SlidersHorizontal}
-                        onPress={() => editManager(m)}
-                      >
-                        РЕДАКТИРОВАТЬ ДОСЬЕ
-                      </Button>
-                    </View>
-                  )}
-                </View>
-              );
-            })()}
-          {tab === "Настройки" && (
-            <>
-              <View style={s.pageHeader}>
-                <Mono style={s.small}>КОНФИГУРАЦИЯ / ЛОКАЛЬНЫЙ УЗЕЛ</Mono>
-                <T style={[s.pageTitle, { marginTop: 8 }]}>НАСТРОЙКИ</T>
-                <T style={s.subtitle}>Ваш офис. Ваши правила протокола.</T>
-                <View style={{ marginTop: 18 }}>
-                  <TechnicalStrip />
-                </View>
-              </View>
-              <View style={s.section}>
-                <CyberFrame style={s.adminPanel}>
-                  <Shield size={28} color={P.lime} />
-                  <View style={{ flex: 1 }}>
-                    <T style={{ fontSize: 20 }}>
-                      {game.admin ? "ЛОКАЛЬНЫЙ АДМИН" : "НАБЛЮДАТЕЛЬ"}
+                    <Crosshair size={30} color={P.lime} />
+                    <T style={{ fontFamily: "Display", fontSize: 21 }}>
+                      OFFICE_PROTOCOL
                     </T>
-                    <T style={{ fontSize: 14, color: P.muted, marginTop: 5 }}>
-                      Управление досье и общей базой карточек
-                    </T>
-                  </View>
-                  <Tag>01</Tag>
-                </CyberFrame>
-                <View style={s.settingRow}>
-                  <View style={{ flex: 1 }}>
-                    <T style={{ fontSize: 18 }}>Режим администратора</T>
-                    <T style={s.settingHelp}>
-                      Отключите, чтобы оставить только игру
-                    </T>
-                  </View>
-                  <ProtocolSwitch
-                    accessibilityLabel="Режим администратора"
-                    value={game.admin}
-                    onValueChange={(admin) => setGame((g) => ({ ...g, admin }))}
-                  />
-                </View>
-                <View style={s.settingRow}>
-                  <View style={{ flex: 1 }}>
-                    <T style={{ fontSize: 18 }}>Тактильный отклик</T>
-                    <T style={s.settingHelp}>Короткий импульс при фиксации</T>
-                  </View>
-                  <ProtocolSwitch
-                    accessibilityLabel="Тактильный отклик"
-                    value={game.haptics}
-                    onValueChange={(haptics) =>
-                      setGame((g) => ({ ...g, haptics }))
-                    }
-                  />
-                </View>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => setSheet("library")}
-                  style={s.settingRow}
-                >
-                  <View style={s.row}>
-                    <Grid3X3 size={21} color={P.lime} />
-                    <View>
-                      <T style={{ fontSize: 18 }}>База карточек</T>
-                      <T style={s.settingHelp}>
-                        Карточек: {game.cards.length} · общий набор
-                      </T>
-                    </View>
-                  </View>
-                  <ChevronRight size={20} color={P.muted} />
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => setSheet("rules")}
-                  style={s.settingRow}
-                >
-                  <View style={s.row}>
-                    <FileText size={21} color={P.lime} />
-                    <T style={{ fontSize: 18 }}>Правила протокола</T>
-                  </View>
-                  <ChevronRight size={20} color={P.muted} />
-                </Pressable>
-                <CyberFrame
-                  style={[s.scorePanel, { marginTop: 25 }]}
-                  color={P.line}
-                >
-                  <View style={s.row}>
-                    <LockKeyhole size={18} color={P.lime} />
-                    <Mono style={{ color: P.lime, fontSize: 10 }}>
-                      ДАННЫЕ НА ЭТОМ УСТРОЙСТВЕ
+                    <Mono style={s.small}>
+                      ВЕРСИЯ 1.2 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
                     </Mono>
                   </View>
-                  <T
-                    style={{
-                      color: P.muted,
-                      fontSize: 15,
-                      marginTop: 13,
-                      lineHeight: 21,
-                    }}
-                  >
-                    Прогресс сохраняется автоматически. Аккаунт и интернет для
-                    игры не нужны. Удаление приложения удалит локальную историю.
-                  </T>
-                </CyberFrame>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => setSheet("reset")}
-                  style={[s.settingRow, { marginTop: 15 }]}
-                >
-                  <T style={{ color: P.red, fontSize: 17 }}>
-                    Сбросить весь прогресс
-                  </T>
-                  <RefreshCw color={P.red} size={18} />
-                </Pressable>
-                <View
-                  style={{ paddingVertical: 40, alignItems: "center", gap: 8 }}
-                >
-                  <Crosshair size={30} color={P.lime} />
-                  <T style={{ fontFamily: "Display", fontSize: 23 }}>
-                    OFFICE_PROTOCOL
-                  </T>
-                  <Mono style={s.small}>
-                    ВЕРСИЯ 1.1 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
-                  </Mono>
                 </View>
-              </View>
-            </>
-          )}
+              </>
+            )}
+          </Reveal>
         </ScrollView>
         <SafeAreaView edges={["bottom"]} style={s.navSafe}>
           <View style={s.nav}>
             {(["Бинго", "Манагеры", "Настройки"] as Tab[]).map((t, i) => {
               const Icon = [Grid3X3, Users, Settings2][i];
               return (
-                <Pressable
+                <MotionPressable
                   key={t}
+                  lift={0}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: tab === t }}
                   aria-selected={tab === t}
@@ -1056,21 +1142,21 @@ function OfficeApp() {
                   >
                     {t.toUpperCase()}
                   </T>
-                </Pressable>
+                </MotionPressable>
               );
             })}
           </View>
         </SafeAreaView>
         {!!toast && (
-          <View style={[s.toast, { pointerEvents: "none" }]}>
+          <Reveal key={toast} style={[s.toast, { pointerEvents: "none" }]}>
             <Check size={16} color={P.ink} />
             <T style={{ color: P.ink, fontSize: 15, flex: 1 }}>{toast}</T>
-          </View>
+          </Reveal>
         )}
         <Modal
           transparent
           visible={sheet !== null}
-          animationType="slide"
+          animationType={reduceMotion ? "none" : "slide"}
           onRequestClose={() => setSheet(null)}
         >
           <View style={s.modalBackdrop}>
@@ -1112,7 +1198,7 @@ function OfficeApp() {
                         У каждого манагера — своё бинго и прогресс.
                       </T>
                       {game.managers.map((m) => (
-                        <Pressable
+                        <MotionPressable
                           key={m.id}
                           accessibilityRole="button"
                           onPress={() => selectManager(m.id)}
@@ -1130,7 +1216,7 @@ function OfficeApp() {
                           ) : (
                             <ChevronRight size={22} color={P.muted} />
                           )}
-                        </Pressable>
+                        </MotionPressable>
                       ))}
                     </>
                   )}
@@ -1233,15 +1319,24 @@ function OfficeApp() {
                             ВНУТРЕННИЙ ДОКУМЕНТ{`\n`}ОФИС / СЕКТОР 01
                           </Mono>
                         </View>
-                        <T
+                        <Mono
                           style={{
-                            fontFamily: "Display",
-                            fontSize: 44,
-                            color: P.white,
+                            color: P.muted,
+                            fontSize: 10,
                             marginTop: 23,
                           }}
                         >
-                          ОБЪЕКТ: {manager.name.toUpperCase()}
+                          ОБЪЕКТ НАБЛЮДЕНИЯ
+                        </Mono>
+                        <T
+                          style={{
+                            fontFamily: "Display",
+                            fontSize: width < 360 ? 28 : 34,
+                            color: P.white,
+                            marginTop: 8,
+                          }}
+                        >
+                          {manager.name.toUpperCase()}
                         </T>
                         <T
                           style={{ color: P.muted, fontSize: 20, marginTop: 5 }}
@@ -1252,16 +1347,21 @@ function OfficeApp() {
                         <T
                           style={{
                             fontFamily: "Display",
-                            fontSize: 68,
+                            fontSize: 56,
                             color: P.lime,
                           }}
                         >
                           {board.score}
-                          <T style={{ fontSize: 16, color: P.muted }}>
-                            {" "}
-                            ОЧКОВ КРИНЖА
-                          </T>
                         </T>
+                        <Mono
+                          style={{
+                            fontSize: 10,
+                            color: P.muted,
+                            marginBottom: 12,
+                          }}
+                        >
+                          ОЧКОВ КРИНЖА
+                        </Mono>
                         <Mono style={{ color: P.lime, fontSize: 11 }}>
                           УРОВЕНЬ {level(board.score)} /{" "}
                           {rank(board.score).toUpperCase()}
@@ -1594,7 +1694,7 @@ function OfficeApp() {
         <Modal
           transparent
           visible={win}
-          animationType="fade"
+          animationType={reduceMotion ? "none" : "fade"}
           onRequestClose={() => setWin(false)}
         >
           <View
@@ -1625,7 +1725,16 @@ function OfficeApp() {
                   СОВПАДЕНИЕ ПОДТВЕРЖДЕНО
                 </Mono>
               </View>
-              <T style={s.winTitle}>БИНГО.</T>
+              <T
+                style={[
+                  s.winTitle,
+                  {
+                    fontSize: Math.min(76, (Math.min(width, 468) - 100) / 3.6),
+                  },
+                ]}
+              >
+                БИНГО.
+              </T>
               <T style={{ color: P.white, fontSize: 22 }}>Это уже система.</T>
               <View style={{ marginTop: 20 }}>
                 <TechnicalStrip />
@@ -1666,7 +1775,7 @@ function ProtocolSwitch({
   accessibilityLabel: string;
 }) {
   return (
-    <Pressable
+    <MotionPressable
       accessibilityRole="switch"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ checked: value }}
@@ -1700,7 +1809,7 @@ function ProtocolSwitch({
           }}
         />
       </CyberFrame>
-    </Pressable>
+    </MotionPressable>
   );
 }
 
@@ -1711,7 +1820,7 @@ const h = StyleSheet.create({
     fontFamily: "Display",
     color: P.white,
     lineHeight: 35,
-    letterSpacing: 0.4,
+    letterSpacing: 0,
   },
   heroFooter: {
     flexDirection: "row",
