@@ -21,6 +21,7 @@ import Svg, {
 import { ArrowUpRight, type ProtocolIconProps } from "./icons";
 import type { Manager } from "./game";
 import { MotionPressable, useMotionSettings } from "./motion";
+import { GLITCH_DURATION } from "./glitch";
 
 const MotionCircle = React.forwardRef<
   Circle,
@@ -202,6 +203,117 @@ export function CyberFrame({
       )}
       {children}
     </View>
+  );
+}
+
+/** Interference is decorative; the parent press target never moves or remounts. */
+export function GlitchFrame({
+  glitch,
+  light = false,
+  children,
+  ...frameProps
+}: React.ComponentProps<typeof CyberFrame> & {
+  glitch: boolean;
+  light?: boolean;
+}) {
+  const { motionActive } = useMotionSettings();
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    progress.stopAnimation();
+    progress.setValue(0);
+    if (!glitch || !motionActive) return;
+    const animation = Animated.timing(progress, {
+      toValue: 1,
+      duration: GLITCH_DURATION,
+      easing: Easing.linear,
+      useNativeDriver: Platform.OS !== "web",
+      isInteraction: false,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [glitch, motionActive, progress]);
+
+  const active = glitch && motionActive;
+  const shift = progress.interpolate({
+    inputRange: [0, 0.12, 0.3, 0.5, 0.7, 1],
+    outputRange: [0, -2, 3, -1, 1, 0],
+  });
+  const interference = progress.interpolate({
+    inputRange: [0, 0.08, 0.45, 0.8, 1],
+    outputRange: [0, 0.7, 0.5, 0.3, 0],
+  });
+  return (
+    <Animated.View
+      testID={active ? "card-glitch-active" : undefined}
+      style={{ flex: 1, transform: [{ translateX: active ? shift : 0 }] }}
+    >
+      <CyberFrame {...frameProps}>
+        {children}
+        {active && (
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              { pointerEvents: "none", opacity: interference },
+            ]}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            aria-hidden
+          >
+            <Svg
+              width="100%"
+              height="100%"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              <Path
+                d="M8 2H66 M2 8V42 M34 97H91L97 91V70"
+                stroke={light ? P.ink : "#67F6EC"}
+                strokeWidth={1.5}
+                fill="none"
+              />
+              <Path
+                d="M37 4H92L98 10V28 M3 65V91L9 97H28"
+                stroke={light ? "#426400" : "#F77AC6"}
+                strokeWidth={1.2}
+                fill="none"
+              />
+              <Rect
+                x={9}
+                y={33}
+                width={78}
+                height={2.2}
+                fill={light ? P.ink : "#67F6EC"}
+                opacity={0.65}
+              />
+              <Rect
+                x={24}
+                y={36}
+                width={65}
+                height={0.8}
+                fill={light ? P.ink : "#F77AC6"}
+              />
+              <Rect
+                x={7}
+                y={63}
+                width={86}
+                height={3}
+                fill={P.ink}
+                opacity={0.7}
+              />
+              <Rect
+                x={19}
+                y={66}
+                width={72}
+                height={1}
+                fill={light ? P.ink : P.lime}
+                opacity={0.8}
+              />
+            </Svg>
+          </Animated.View>
+        )}
+      </CyberFrame>
+    </Animated.View>
   );
 }
 
@@ -755,7 +867,7 @@ export const s = StyleSheet.create({
   chipText: { color: P.muted, fontSize: 9 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   cell: {
-    backgroundColor: P.panel,
+    backgroundColor: "transparent",
     borderWidth: 1,
     borderColor: P.line,
     padding: 9,

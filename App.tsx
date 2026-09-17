@@ -62,6 +62,7 @@ import {
   Avatar,
   Meter,
   CyberFrame,
+  GlitchFrame,
   Radar,
   Segments,
   TechnicalStrip,
@@ -73,6 +74,7 @@ import {
   MotionPressable,
   Reveal,
   useMotionSettings,
+  useRandomGlitch,
 } from "./src/motion";
 
 const STORAGE = "office-protocol:v1";
@@ -130,6 +132,14 @@ function OfficeApp() {
   const entries = game.incidents.filter((i) => i.managerId === manager.id);
   const allMarked = board.marked.length === 9;
   const cellWidth = (Math.min(width, 480) - 36 - 12) / 3;
+  const glitchTarget = useRandomGlitch(
+    board.cards.filter(
+      (id) =>
+        category === null ||
+        game.cards.find((c) => c.id === id)?.category === category,
+    ),
+    ready && fonts && tab === "Бинго" && sheet === null && !win,
+  );
   useEffect(() => {
     if (reduceMotion) {
       pulse.stopAnimation();
@@ -438,25 +448,56 @@ function OfficeApp() {
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ gap: 6, paddingBottom: 12 }}
+                    contentContainerStyle={{
+                      gap: 6,
+                      paddingTop: 3,
+                      paddingBottom: 12,
+                    }}
                   >
                     {[null, ...CATEGORIES].map((c) => (
                       <MotionPressable
                         key={c ?? "all"}
+                        focusOutline={false}
                         accessibilityRole="button"
                         accessibilityState={{ selected: category === c }}
                         aria-pressed={category === c}
                         onPress={() => setCategory(c)}
-                        style={[s.chip, category === c && s.chipActive]}
                       >
-                        <Mono
-                          style={[
-                            s.chipText,
-                            category === c && { color: P.ink },
-                          ]}
-                        >
-                          {c ?? "Все события"}
-                        </Mono>
+                        {({ hovered, focused }) => (
+                          <CyberFrame
+                            cut={7}
+                            color={
+                              focused
+                                ? P.white
+                                : category === c || hovered
+                                  ? P.lime
+                                  : P.line
+                            }
+                            fill={category === c ? P.lime : P.panel}
+                            style={{
+                              paddingHorizontal: 12,
+                              paddingVertical: 10,
+                              minHeight: 36,
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Mono
+                              style={[
+                                s.chipText,
+                                {
+                                  color:
+                                    category === c
+                                      ? P.ink
+                                      : hovered || focused
+                                        ? P.white
+                                        : P.muted,
+                                },
+                              ]}
+                            >
+                              {c ?? "Все события"}
+                            </Mono>
+                          </CyberFrame>
+                        )}
                       </MotionPressable>
                     ))}
                   </ScrollView>
@@ -487,7 +528,9 @@ function OfficeApp() {
                           ]}
                         >
                           {({ hovered, focused }) => (
-                            <CyberFrame
+                            <GlitchFrame
+                              glitch={glitchTarget === id}
+                              light={checked}
                               cut={7}
                               color={
                                 checked || hovered || focused
@@ -548,7 +591,7 @@ function OfficeApp() {
                                   </View>
                                 )}
                               </View>
-                            </CyberFrame>
+                            </GlitchFrame>
                           )}
                         </MotionPressable>
                       );
@@ -1082,7 +1125,7 @@ function OfficeApp() {
                       OFFICE_PROTOCOL
                     </T>
                     <Mono style={s.small}>
-                      ВЕРСИЯ 1.2.1 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
+                      ВЕРСИЯ 1.2.2 / СДЕЛАНО МЕЖДУ СОЗВОНАМИ
                     </Mono>
                   </View>
                 </View>

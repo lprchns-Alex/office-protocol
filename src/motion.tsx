@@ -21,6 +21,7 @@ import {
   type View,
   type ViewStyle,
 } from "react-native";
+import { startGlitchLoop } from "./glitch";
 
 type MotionSettings = { reduceMotion: boolean; motionActive: boolean };
 const MotionContext = createContext<MotionSettings>({
@@ -90,6 +91,20 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
 
 export function useMotionSettings() {
   return useContext(MotionContext);
+}
+
+export function useRandomGlitch(candidates: string[], enabled: boolean) {
+  const { motionActive } = useMotionSettings();
+  const [target, setTarget] = useState<string | null>(null);
+  const candidateKey = JSON.stringify(candidates);
+
+  useEffect(() => {
+    setTarget(null);
+    if (!enabled || !motionActive) return;
+    return startGlitchLoop(JSON.parse(candidateKey) as string[], setTarget);
+  }, [candidateKey, enabled, motionActive]);
+
+  return enabled && motionActive ? target : null;
 }
 
 /** Reveal only on mount. Returning from the background never hides content again. */
@@ -171,12 +186,13 @@ export type MotionPressableProps = Omit<
     | StyleProp<ViewStyle>
     | ((state: MotionPressableState) => StyleProp<ViewStyle>);
   children?:
-    | React.ReactNode
-    | ((state: MotionPressableState) => React.ReactNode);
+    React.ReactNode | ((state: MotionPressableState) => React.ReactNode);
   enterDelay?: number;
   lift?: number;
   glow?: boolean;
   confirmed?: boolean;
+  /** Disable only when the child draws its own keyboard-focus indicator. */
+  focusOutline?: boolean;
 };
 
 /** Animate the pressable itself, keeping flex/grid sizing and touch bounds intact. */
@@ -189,6 +205,7 @@ export const MotionPressable = forwardRef<View, MotionPressableProps>(
       lift = 2,
       glow = true,
       confirmed = false,
+      focusOutline = true,
       disabled,
       onHoverIn,
       onHoverOut,
@@ -362,12 +379,13 @@ export const MotionPressable = forwardRef<View, MotionPressableProps>(
             shadowRadius: 12,
             shadowOpacity: halo,
           },
-          state.focused && {
-            outlineColor: accent,
-            outlineStyle: "solid",
-            outlineWidth: 2,
-            outlineOffset: 3,
-          },
+          focusOutline &&
+            state.focused && {
+              outlineColor: accent,
+              outlineStyle: "solid",
+              outlineWidth: 2,
+              outlineOffset: 3,
+            },
         ]}
       >
         {typeof children === "function" ? children(state) : children}
